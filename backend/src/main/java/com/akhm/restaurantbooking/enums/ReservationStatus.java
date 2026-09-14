@@ -1,4 +1,10 @@
 package com.akhm.restaurantbooking.enums;
 
-public class ReservationStatus {
+public enum ReservationStatus {
+
+    PENDING,
+    CONFIRMED,
+    REJECTED,
+    CANCELLED,
+    COMPLETED
 }
