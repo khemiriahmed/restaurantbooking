@@ -1,4 +1,8 @@
 package com.akhm.restaurantbooking.enums;
 
-public class RestaurantTableStatus {
+public enum RestaurantTableStatus {
+
+    AVAILABLE,
+    UNAVAILABLE,
+    MAINTENANCE
 }
