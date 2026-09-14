@@ -1,4 +1,8 @@
 package com.akhm.restaurantbooking.enums;
 
-public class RoleName {
+public enum RoleName {
+
+    CLIENT,
+    RESTAURANT,
+    ADMIN
 }
