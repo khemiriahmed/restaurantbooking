@@ -7,6 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDate;
 import java.util.List;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 public interface ReservationRepository
         extends JpaRepository<Reservation, Long> {
 
@@ -19,4 +22,12 @@ public interface ReservationRepository
     List<Reservation> findByReservationDate(LocalDate date);
 
     List<Reservation> findByStatus(ReservationStatus status);
+
+    boolean existsByRestaurantTableIdAndReservationDateAndStatusInAndStartTimeLessThanAndEndTimeGreaterThan(
+            Long tableId,
+            LocalDate date,
+            List<ReservationStatus> statuses,
+            LocalTime endTime,
+            LocalTime startTime
+    );
 }
