@@ -95,6 +95,9 @@ public class RestaurantTableService {
         }
 
         table.setRestaurant(restaurant);
+        if (table.getStatus() == null) {
+            table.setStatus(RestaurantTableStatus.AVAILABLE);
+        }
 
         return tableRepository.save(table);
     }
