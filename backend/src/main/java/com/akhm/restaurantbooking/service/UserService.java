@@ -1,8 +1,11 @@
 package com.akhm.restaurantbooking.service;
 
+import com.akhm.restaurantbooking.entity.Role;
 import com.akhm.restaurantbooking.entity.User;
+import com.akhm.restaurantbooking.enums.RoleName;
 import com.akhm.restaurantbooking.exception.ConflictException;
 import com.akhm.restaurantbooking.exception.ResourceNotFoundException;
+import com.akhm.restaurantbooking.repository.RoleRepository;
 import com.akhm.restaurantbooking.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,13 +17,13 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
 
     public List<User> findAll() {
         return userRepository.findAll();
     }
 
     public User findById(Long id) {
-
         return userRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
@@ -30,7 +33,6 @@ public class UserService {
     }
 
     public User findByEmail(String email) {
-
         return userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
@@ -49,31 +51,26 @@ public class UserService {
             );
         }
 
+        Role clientRole = roleRepository.findByName(RoleName.CLIENT)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "CLIENT role not found"
+                        )
+                );
+
+        user.setRole(clientRole);
+
         return userRepository.save(user);
     }
 
-    public User update(
-            Long id,
-            User updatedUser
-    ) {
+    public User update(Long id, User updatedUser) {
 
         User existingUser = findById(id);
 
-        existingUser.setFirstName(
-                updatedUser.getFirstName()
-        );
-
-        existingUser.setLastName(
-                updatedUser.getLastName()
-        );
-
-        existingUser.setPhone(
-                updatedUser.getPhone()
-        );
-
-        existingUser.setEnabled(
-                updatedUser.getEnabled()
-        );
+        existingUser.setFirstName(updatedUser.getFirstName());
+        existingUser.setLastName(updatedUser.getLastName());
+        existingUser.setPhone(updatedUser.getPhone());
+        existingUser.setEnabled(updatedUser.getEnabled());
 
         return userRepository.save(existingUser);
     }
