@@ -5,6 +5,7 @@ import com.akhm.restaurantbooking.enums.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.DayOfWeek;
+import java.util.List;
 import java.util.Optional;
 
 public interface RestaurantHourRepository
@@ -14,4 +15,5 @@ public interface RestaurantHourRepository
             Long restaurantId,
             DayOfWeek dayOfWeek
     );
+    List<RestaurantHour> findByRestaurantId(Long restaurantId);
 }

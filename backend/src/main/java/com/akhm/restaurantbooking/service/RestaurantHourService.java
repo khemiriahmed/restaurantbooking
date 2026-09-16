@@ -19,8 +19,11 @@ public class RestaurantHourService {
     private final RestaurantHourRepository hourRepository;
     private final RestaurantService restaurantService;
 
-    public List<RestaurantHour> findAll() {
-        return hourRepository.findAll();
+    public List<RestaurantHour> findByRestaurant(Long restaurantId) {
+
+        restaurantService.findById(restaurantId);
+
+        return hourRepository.findByRestaurantId(restaurantId);
     }
 
     public RestaurantHour findById(Long id) {
