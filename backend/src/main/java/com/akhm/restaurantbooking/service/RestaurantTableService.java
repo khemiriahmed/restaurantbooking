@@ -4,9 +4,11 @@ import com.akhm.restaurantbooking.entity.Restaurant;
 import com.akhm.restaurantbooking.entity.RestaurantTable;
 import com.akhm.restaurantbooking.enums.RestaurantTableStatus;
 import com.akhm.restaurantbooking.exception.BadRequestException;
+import com.akhm.restaurantbooking.exception.ConflictException;
 import com.akhm.restaurantbooking.exception.ResourceNotFoundException;
 import com.akhm.restaurantbooking.repository.RestaurantTableRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -83,23 +85,31 @@ public class RestaurantTableService {
             RestaurantTable table
     ) {
 
-        Restaurant restaurant =
-                restaurantService.findById(restaurantId);
+        Restaurant restaurant = restaurantService.findById(restaurantId);
 
-        if (table.getCapacity() == null
-                || table.getCapacity() <= 0) {
-
+        if (table.getCapacity() == null || table.getCapacity() <= 0) {
             throw new BadRequestException(
                     "Table capacity must be greater than 0"
             );
         }
 
         table.setRestaurant(restaurant);
+
         if (table.getStatus() == null) {
             table.setStatus(RestaurantTableStatus.AVAILABLE);
         }
 
-        return tableRepository.save(table);
+        try {
+
+            return tableRepository.save(table);
+
+        } catch (DataIntegrityViolationException exception) {
+
+            throw new ConflictException(
+                    "Table number " + table.getTableNumber()
+                            + " already exists in this restaurant"
+            );
+        }
     }
 
     public RestaurantTable update(
