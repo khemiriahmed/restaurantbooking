@@ -18,6 +18,7 @@ public record UserRequest(
         @Email(message = "Invalid email")
         String email,
 
+        @NotBlank(message = "Password is required")
         @Size(min = 8, message = "Password must contain at least 8 characters")
         String password,
 
