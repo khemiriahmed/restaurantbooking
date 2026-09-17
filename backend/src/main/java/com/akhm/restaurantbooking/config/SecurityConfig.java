@@ -1,5 +1,8 @@
 package com.akhm.restaurantbooking.config;
 
+import com.akhm.restaurantbooking.security.CustomAuthenticationEntryPoint;
+import com.akhm.restaurantbooking.security.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -10,10 +13,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
+
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    //private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -29,23 +39,41 @@ public class SecurityConfig {
                         )
                 )
 
+               /* .exceptionHandling(exception ->
+                        exception.authenticationEntryPoint(
+                                        authenticationEntryPoint
+                                )
+                )*/
+
                 .authorizeHttpRequests(auth -> auth
 
-                        // Swagger
+                        // Swagger public
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-                        // Pour l'instant, toutes les API REST
-                        // restent accessibles.
-                        .requestMatchers("/api/**")
-                        .permitAll()
+                        // Authentification publique
+                        .requestMatchers(
+                                "/api/auth/**"
+                        ).permitAll()
 
-                        .anyRequest()
-                        .permitAll()
+                        // Utilisateurs : JWT obligatoire
+                        .requestMatchers(
+                                "/api/users/**"
+                        ).authenticated()
+
+                        // Le reste temporairement public
+                        .requestMatchers("/api/**").permitAll()
+
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
                 );
+
 
         return http.build();
     }
