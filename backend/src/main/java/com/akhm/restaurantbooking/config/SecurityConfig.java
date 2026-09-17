@@ -47,25 +47,28 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Swagger public
+                        // Swagger
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-                        // Authentification publique
-                        .requestMatchers(
-                                "/api/auth/**"
-                        ).permitAll()
+                        // Auth
+                        .requestMatchers("/api/auth/**")
+                        .permitAll()
 
-                        // Utilisateurs : JWT obligatoire
-                        .requestMatchers(
-                                "/api/users/**"
-                        ).authenticated()
+                        // Administration utilisateurs
+                        .requestMatchers("/api/users/**")
+                        .hasRole("ADMIN")
 
-                        // Le reste temporairement public
-                        .requestMatchers("/api/**").permitAll()
+                        // Réservations
+                        .requestMatchers("/api/reservations/**")
+                        .hasRole("CLIENT")
+
+                        // Autres endpoints temporairement publics
+                        .requestMatchers("/api/**")
+                        .permitAll()
 
                         .anyRequest().authenticated()
                 )
