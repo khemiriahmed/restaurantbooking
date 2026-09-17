@@ -23,7 +23,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    //private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -39,33 +39,36 @@ public class SecurityConfig {
                         )
                 )
 
-               /* .exceptionHandling(exception ->
+                .exceptionHandling(exception ->
                         exception.authenticationEntryPoint(
                                         authenticationEntryPoint
                                 )
-                )*/
+                )
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Swagger public
+                        // Swagger
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
 
-                        // Authentification publique
-                        .requestMatchers(
-                                "/api/auth/**"
-                        ).permitAll()
+                        // Auth
+                        .requestMatchers("/api/auth/**")
+                        .permitAll()
 
-                        // Utilisateurs : JWT obligatoire
-                        .requestMatchers(
-                                "/api/users/**"
-                        ).authenticated()
+                        // Administration utilisateurs
+                        .requestMatchers("/api/users/**")
+                        .hasRole("ADMIN")
 
-                        // Le reste temporairement public
-                        .requestMatchers("/api/**").permitAll()
+                        // Réservations
+                        .requestMatchers("/api/reservations/**")
+                        .hasRole("CLIENT")
+
+                        // Autres endpoints temporairement publics
+                        .requestMatchers("/api/**")
+                        .permitAll()
 
                         .anyRequest().authenticated()
                 )

@@ -33,12 +33,7 @@ public class CustomUserDetailsService
                 .withUsername(user.getEmail())
                 .password(user.getPassword())
                 .authorities(
-                        List.of(
-                                new SimpleGrantedAuthority(
-                                        "ROLE_" +
-                                                user.getRole().getName().name()
-                                )
-                        )
+                        "ROLE_" + user.getRole().getName().name()
                 )
                 .disabled(!Boolean.TRUE.equals(user.getEnabled()))
                 .build();
