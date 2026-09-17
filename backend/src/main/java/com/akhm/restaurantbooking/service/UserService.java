@@ -3,12 +3,14 @@ package com.akhm.restaurantbooking.service;
 import com.akhm.restaurantbooking.entity.Role;
 import com.akhm.restaurantbooking.entity.User;
 import com.akhm.restaurantbooking.enums.RoleName;
+import com.akhm.restaurantbooking.exception.BadRequestException;
 import com.akhm.restaurantbooking.exception.ConflictException;
 import com.akhm.restaurantbooking.exception.ResourceNotFoundException;
 import com.akhm.restaurantbooking.repository.RoleRepository;
 import com.akhm.restaurantbooking.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
@@ -18,6 +20,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public List<User> findAll() {
         return userRepository.findAll();
@@ -59,6 +62,18 @@ public class UserService {
                 );
 
         user.setRole(clientRole);
+
+        if (user.getPassword() == null
+                || user.getPassword().isBlank()) {
+
+            throw new BadRequestException(
+                    "Password is required"
+            );
+        }
+
+        user.setPassword(
+                passwordEncoder.encode(user.getPassword())
+        );
 
         return userRepository.save(user);
     }
