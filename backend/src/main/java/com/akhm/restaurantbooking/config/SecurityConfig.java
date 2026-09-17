@@ -23,7 +23,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    //private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -39,11 +39,11 @@ public class SecurityConfig {
                         )
                 )
 
-               /* .exceptionHandling(exception ->
+                .exceptionHandling(exception ->
                         exception.authenticationEntryPoint(
                                         authenticationEntryPoint
                                 )
-                )*/
+                )
 
                 .authorizeHttpRequests(auth -> auth
 
