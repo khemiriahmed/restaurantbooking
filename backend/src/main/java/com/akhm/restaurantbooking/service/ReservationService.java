@@ -8,10 +8,13 @@ import com.akhm.restaurantbooking.enums.ReservationStatus;
 import com.akhm.restaurantbooking.enums.RestaurantTableStatus;
 import com.akhm.restaurantbooking.exception.BadRequestException;
 import com.akhm.restaurantbooking.exception.ConflictException;
+import com.akhm.restaurantbooking.exception.ResourceNotFoundException;
 import com.akhm.restaurantbooking.repository.ReservationRepository;
+import com.akhm.restaurantbooking.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -22,6 +25,7 @@ import java.util.List;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
+    private final UserRepository userRepository;
     private final UserService userService;
     private final RestaurantService restaurantService;
     private final RestaurantTableService tableService;
@@ -31,13 +35,38 @@ public class ReservationService {
         return reservationRepository.findAll();
     }
 
-    public Reservation findById(Long id) {
+    public Reservation findById(
+            Long id,
+            String authenticatedEmail
+    ) {
 
-        return reservationRepository.findById(id)
+        Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() ->
-                        new com.akhm.restaurantbooking.exception
-                                .ResourceNotFoundException(
+                        new ResourceNotFoundException(
                                 "Reservation not found with id: " + id
+                        )
+                );
+
+        User authenticatedUser =
+                getAuthenticatedUser(authenticatedEmail);
+
+        if (!reservation.getUser().getId()
+                .equals(authenticatedUser.getId())) {
+
+            throw new AccessDeniedException(
+                    "You are not allowed to access this reservation"
+            );
+        }
+
+        return reservation;
+    }
+
+    private User getAuthenticatedUser(String email) {
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "User not found with email: " + email
                         )
                 );
     }
@@ -255,9 +284,9 @@ public class ReservationService {
         }
     }
 
-    public Reservation confirm(Long id) {
+    public Reservation confirm(Long id, String authenticatedEmail) {
 
-        Reservation reservation = findById(id);
+        Reservation reservation = findById(id,authenticatedEmail);
 
         if (reservation.getStatus()
                 != ReservationStatus.PENDING) {
@@ -276,9 +305,9 @@ public class ReservationService {
         );
     }
 
-    public Reservation reject(Long id) {
+    public Reservation reject(Long id, String authenticatedEmail) {
 
-        Reservation reservation = findById(id);
+        Reservation reservation = findById(id, authenticatedEmail);
 
         if (reservation.getStatus()
                 != ReservationStatus.PENDING) {
@@ -297,9 +326,9 @@ public class ReservationService {
         );
     }
 
-    public Reservation cancel(Long id) {
+    public Reservation cancel(Long id, String authenticatedEmail) {
 
-        Reservation reservation = findById(id);
+        Reservation reservation = findById(id, authenticatedEmail);
 
         if (reservation.getStatus()
                 == ReservationStatus.CANCELLED) {
@@ -326,9 +355,9 @@ public class ReservationService {
         );
     }
 
-    public Reservation complete(Long id) {
+    public Reservation complete(Long id, String authenticatedEmail) {
 
-        Reservation reservation = findById(id);
+        Reservation reservation = findById(id, authenticatedEmail);
 
         if (reservation.getStatus()
                 != ReservationStatus.CONFIRMED) {
@@ -347,9 +376,9 @@ public class ReservationService {
         );
     }
 
-    public void delete(Long id) {
+    public void delete(Long id, String authenticatedEmail) {
 
-        Reservation reservation = findById(id);
+        Reservation reservation = findById(id, authenticatedEmail);
 
         reservationRepository.delete(reservation);
     }
