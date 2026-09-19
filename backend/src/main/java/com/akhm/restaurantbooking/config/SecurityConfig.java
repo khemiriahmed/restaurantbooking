@@ -64,7 +64,7 @@ public class SecurityConfig {
 
                         // Réservations
                         .requestMatchers("/api/reservations/**")
-                        .hasRole("CLIENT")
+                        .hasAnyRole("CLIENT", "RESTAURANT", "ADMIN")
 
                         // Autres endpoints temporairement publics
                         .requestMatchers("/api/**")
