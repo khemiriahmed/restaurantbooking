@@ -7,6 +7,7 @@ import com.akhm.restaurantbooking.service.ReservationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,11 +30,15 @@ public class ReservationController {
 
     @GetMapping("/{id}")
     public ReservationResponse findById(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Authentication authentication
     ) {
 
         return toResponse(
-                reservationService.findById(id)
+                reservationService.findById(
+                        id,
+                        authentication.getName()
+                )
         );
     }
 
@@ -95,51 +100,71 @@ public class ReservationController {
 
     @PatchMapping("/{id}/confirm")
     public ReservationResponse confirm(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Authentication authentication
     ) {
 
         return toResponse(
-                reservationService.confirm(id)
+                reservationService.confirm(
+                        id,
+                        authentication.getName()
+                )
         );
     }
 
     @PatchMapping("/{id}/reject")
     public ReservationResponse reject(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Authentication authentication
     ) {
 
         return toResponse(
-                reservationService.reject(id)
+                reservationService.reject(
+                        id,
+                        authentication.getName()
+                )
         );
     }
 
     @PatchMapping("/{id}/cancel")
     public ReservationResponse cancel(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Authentication authentication
     ) {
 
         return toResponse(
-                reservationService.cancel(id)
+                reservationService.cancel(
+                        id,
+                        authentication.getName()
+                )
         );
     }
 
     @PatchMapping("/{id}/complete")
     public ReservationResponse complete(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Authentication authentication
     ) {
 
         return toResponse(
-                reservationService.complete(id)
+                reservationService.complete(
+                        id,
+                        authentication.getName()
+                )
         );
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Authentication authentication
     ) {
 
-        reservationService.delete(id);
+        reservationService.delete(
+                id,
+                authentication.getName()
+        );
     }
 
     private ReservationResponse toResponse(
