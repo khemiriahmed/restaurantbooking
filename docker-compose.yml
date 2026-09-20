@@ -20,8 +20,35 @@ services:
       - restaurant-network
 
 
+  angular:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+
+    container_name: restaurant-booking-frontend
+    restart: unless-stopped
+
+    working_dir: /app
+
+    ports:
+      - "4200:4200"
+
+    volumes:
+      - ./frontend:/app
+      - angular_node_modules:/app/node_modules
+
+    networks:
+      - restaurant-network
+
+    stdin_open: true
+    tty: true
+
+    command: sh
+
+
 volumes:
   postgres_data:
+  angular_node_modules:
 
 
 networks:
