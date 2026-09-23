@@ -1,0 +1,67 @@
+<header class="navbar">
+  <div class="navbar-container">
+
+    <!-- Logo -->
+    <a routerLink="/" class="logo">
+      <span class="logo-icon">🍽️</span>
+      <span>Restaurant Booking</span>
+    </a>
+
+    <!-- Bouton menu mobile -->
+    <button
+      class="menu-toggle"
+      type="button"
+      (click)="toggleMenu()"
+      aria-label="Ouvrir le menu"
+    >
+      ☰
+    </button>
+
+    <!-- Navigation principale -->
+    <nav class="nav-links" [class.active]="isMenuOpen">
+
+      <!-- <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        Accueil
+      </a> -->
+
+      <a routerLink="/restaurants" routerLinkActive="active">
+        Restaurants
+      </a>
+
+      <a routerLink="/reservations" routerLinkActive="active">
+        Réservations
+      </a>
+
+      <a routerLink="/login" routerLinkActive="active">
+        Connexion
+      </a>
+
+      <a routerLink="/register" routerLinkActive="active" class="register-link">
+        Inscription
+      </a>
+
+      <!-- Menu utilisateur provisoire -->
+      <div class="user-menu">
+        <button
+          type="button"
+          class="user-button"
+          (click)="toggleUserMenu()"
+        >
+          👤 Mon compte ▾
+        </button>
+
+        @if (isUserMenuOpen) {
+          <div class="user-dropdown">
+            <a routerLink="/profile">Mon profil</a>
+            <a routerLink="/reservations">Mes réservations</a>
+
+            <button type="button" (click)="logout()">
+              Déconnexion
+            </button>
+          </div>
+        }
+      </div>
+
+    </nav>
+  </div>
+</header>
