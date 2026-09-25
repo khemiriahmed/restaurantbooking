@@ -8,12 +8,7 @@
     </a>
 
     <!-- Bouton menu mobile -->
-    <button
-      class="menu-toggle"
-      type="button"
-      (click)="toggleMenu()"
-      aria-label="Ouvrir le menu"
-    >
+    <button class="menu-toggle" type="button" (click)="toggleMenu()" aria-label="Ouvrir le menu">
       ☰
     </button>
 
@@ -42,23 +37,19 @@
 
       <!-- Menu utilisateur provisoire -->
       <div class="user-menu">
-        <button
-          type="button"
-          class="user-button"
-          (click)="toggleUserMenu()"
-        >
+        <button type="button" class="user-button" (click)="toggleUserMenu()">
           👤 Mon compte ▾
         </button>
 
         @if (isUserMenuOpen) {
-          <div class="user-dropdown">
-            <a routerLink="/profile">Mon profil</a>
-            <a routerLink="/reservations">Mes réservations</a>
+        <div class="user-dropdown">
+          <a routerLink="/profile">Mon profil</a>
+          <a routerLink="/reservations">Mes réservations</a>
 
-            <button type="button" (click)="logout()">
-              Déconnexion
-            </button>
-          </div>
+          <button type="button" (click)="logout()">
+            Déconnexion
+          </button>
+        </div>
         }
       </div>
 
