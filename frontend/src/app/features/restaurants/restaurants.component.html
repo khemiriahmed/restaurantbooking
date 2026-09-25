@@ -1,0 +1,65 @@
+<section class="restaurants-page">
+  <div class="section-container">
+    <div class="page-header">
+      <span class="page-badge">
+        <i class="fa-solid fa-utensils"></i>
+        Restaurant Booking
+      </span>
+
+      <h1>Découvrez nos restaurants</h1>
+
+      <p>Trouvez le restaurant qui vous convient et réservez votre table facilement.</p>
+    </div>
+
+    @if (loading) {
+      <div class="loading">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Chargement des restaurants...
+      </div>
+    }
+
+    @if (errorMessage) {
+      <div class="error-message">
+        <i class="fa-solid fa-circle-exclamation"></i>
+
+        {{ errorMessage }}
+      </div>
+    }
+
+    @if (!loading && !errorMessage) {
+      <div class="restaurants-grid">
+        @for (restaurant of restaurants; track restaurant.id) {
+          <article class="restaurant-card">
+            <div class="restaurant-image">
+              <i class="fa-solid fa-utensils"></i>
+            </div>
+
+            <div class="restaurant-content">
+              <h2>
+                {{ restaurant.name }}
+              </h2>
+
+              <p class="restaurant-location">
+                <i class="fa-solid fa-location-dot"></i>
+
+                {{ restaurant.address }}
+              </p>
+
+              @if (restaurant.description) {
+                <p>
+                  {{ restaurant.description }}
+                </p>
+              }
+
+              <a [routerLink]="['/restaurants', restaurant.id]" class="btn btn-primary">
+                Voir le restaurant
+
+                <i class="fa-solid fa-arrow-right"></i>
+              </a>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </div>
+</section>
