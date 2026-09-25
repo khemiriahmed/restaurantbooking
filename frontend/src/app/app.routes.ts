@@ -5,10 +5,15 @@ export const routes: Routes = [
   {
     path: '',
     component: MainLayoutComponent,
- 
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./features/home/home.component').then((m) => m.HomeComponent),
+      },
+    ],
   },
   {
     path: '**',
-    redirectTo: ''
-  }
+    redirectTo: '',
+  },
 ];
