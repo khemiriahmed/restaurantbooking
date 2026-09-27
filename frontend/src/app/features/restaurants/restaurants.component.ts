@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { Restaurant } from '../../../models/restaurant.model';
@@ -9,11 +9,11 @@ import { RestaurantService } from '../../../services/restaurant.service';
   standalone: true,
   imports: [RouterLink],
   templateUrl: './restaurants.component.html',
-  styleUrl: './restaurants.component.css'
+  styleUrl: './restaurants.component.css',
 })
 export class RestaurantsComponent implements OnInit {
-
   private restaurantService = inject(RestaurantService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   restaurants: Restaurant[] = [];
 
@@ -25,26 +25,31 @@ export class RestaurantsComponent implements OnInit {
   }
 
   loadRestaurants(): void {
-
     this.loading = true;
     this.errorMessage = '';
 
     this.restaurantService.getRestaurants().subscribe({
-
       next: (data) => {
+        console.log('1 - réponse API');
+
         this.restaurants = data;
+
+        console.log('2 - restaurants :', this.restaurants);
+
         this.loading = false;
+
+        console.log('3 - loading :', this.loading);
+
+        this.cdr.detectChanges();
       },
 
       error: (error) => {
         console.error('Erreur lors du chargement des restaurants', error);
 
-        this.errorMessage =
-          'Impossible de charger les restaurants.';
+        this.errorMessage = 'Impossible de charger les restaurants.';
 
         this.loading = false;
-      }
-
+      },
     });
   }
 }
