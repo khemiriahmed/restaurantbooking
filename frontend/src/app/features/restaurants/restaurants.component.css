@@ -95,6 +95,32 @@
   background: #222;
 }
 
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 60px 20px;
+  font-size: 18px;
+}
+
+.loading i {
+  font-size: 20px;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 20px;
+
+  border-radius: 10px;
+
+  font-size: 16px;
+}
+
 @media (max-width: 900px) {
   .restaurants-grid {
     grid-template-columns: repeat(2, 1fr);
