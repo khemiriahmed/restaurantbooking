@@ -1,0 +1,63 @@
+<section class="restaurant-detail">
+  <div class="section-container">
+    @if (loading) {
+      <div class="loading">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+
+        Chargement du restaurant...
+      </div>
+    }
+
+    @if (errorMessage) {
+      <div class="error-message">
+        <i class="fa-solid fa-circle-exclamation"></i>
+
+        {{ errorMessage }}
+      </div>
+    }
+
+    @if (restaurant && !loading) {
+      <div class="restaurant-header">
+        <div class="restaurant-icon">
+          <i class="fa-solid fa-utensils"></i>
+        </div>
+
+        <div>
+          <h1>
+            {{ restaurant.name }}
+          </h1>
+
+          <p class="location">
+            <i class="fa-solid fa-location-dot"></i>
+
+            {{ restaurant.address }}
+          </p>
+        </div>
+      </div>
+
+      <div class="restaurant-content">
+        <h2>À propos du restaurant</h2>
+
+        @if (restaurant.description) {
+          <p>
+            {{ restaurant.description }}
+          </p>
+        } @else {
+          <p>Découvrez ce restaurant et ses différentes possibilités de réservation.</p>
+        }
+      </div>
+
+      <div class="reservation-action">
+        <h2>Prêt à réserver ?</h2>
+
+        <p>Consultez les tables disponibles et choisissez votre date de réservation.</p>
+
+        <button class="btn btn-primary">
+          <i class="fa-solid fa-calendar-check"></i>
+
+          Réserver une table
+        </button>
+      </div>
+    }
+  </div>
+</section>
