@@ -27,19 +27,11 @@ export class RestaurantsComponent implements OnInit {
   loadRestaurants(): void {
     this.loading = true;
     this.errorMessage = '';
-
     this.restaurantService.getRestaurants().subscribe({
       next: (data) => {
-        console.log('1 - réponse API');
-
         this.restaurants = data;
-
-        console.log('2 - restaurants :', this.restaurants);
-
         this.loading = false;
-
         console.log('3 - loading :', this.loading);
-
         this.cdr.detectChanges();
       },
 
