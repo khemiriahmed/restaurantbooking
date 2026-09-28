@@ -31,7 +31,6 @@ export class RestaurantsComponent implements OnInit {
       next: (data) => {
         this.restaurants = data;
         this.loading = false;
-        console.log('3 - loading :', this.loading);
         this.cdr.detectChanges();
       },
 
