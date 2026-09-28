@@ -10,11 +10,17 @@ export const routes: Routes = [
         path: '',
         loadComponent: () => import('./features/home/home.component').then((m) => m.HomeComponent),
       },
-       {
+      {
         path: 'restaurants',
         loadComponent: () =>
           import('./features/restaurants/restaurants.component')
             .then(m => m.RestaurantsComponent)
+      },
+      {
+        path: 'restaurants/:id',
+        loadComponent: () =>
+          import('./features/restaurant-detail/restaurant-detail.component')
+            .then(m => m.RestaurantDetailComponent)
       }
     ],
   },
