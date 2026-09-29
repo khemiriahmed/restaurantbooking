@@ -115,3 +115,113 @@
   }
 
 }
+
+
+.tables-section {
+  margin-top: 50px;
+}
+
+.section-header {
+  margin-bottom: 25px;
+}
+
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.section-header h2 {
+  margin-bottom: 10px;
+}
+
+.section-header p {
+  color: #666;
+}
+
+.tables-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.table-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  padding: 20px;
+
+  border: 1px solid #eee;
+  border-radius: 14px;
+
+  background: #fff;
+}
+
+.table-icon {
+  width: 55px;
+  height: 55px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 12px;
+  background: #f5f5f5;
+
+  font-size: 22px;
+}
+
+.table-info {
+  flex: 1;
+}
+
+.table-info h3 {
+  margin: 0 0 7px;
+}
+
+.table-info p {
+  margin: 0;
+  color: #666;
+}
+
+.table-info i {
+  margin-right: 5px;
+}
+
+.table-card .btn {
+  margin-top: 0;
+}
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  border: 1px dashed #ccc;
+  border-radius: 14px;
+}
+
+.empty-state i {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 30px;
+}
+
+@media (max-width: 700px) {
+
+  .tables-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .table-card {
+    flex-wrap: wrap;
+  }
+
+  .table-card .btn {
+    width: 100%;
+  }
+
+}

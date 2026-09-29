@@ -59,5 +59,68 @@
         </button>
       </div>
     }
+    <div class="tables-section">
+      <div class="section-header">
+        <span class="section-badge">
+          <i class="fa-solid fa-chair"></i>
+          Disponibilité
+        </span>
+
+        <h2>Choisissez votre table</h2>
+
+        <p>Sélectionnez une table disponible pour votre réservation.</p>
+      </div>
+
+      @if (tablesLoading) {
+        <div class="loading">
+          <i class="fa-solid fa-spinner fa-spin"></i>
+
+          Chargement des tables...
+        </div>
+      }
+
+      @if (tablesErrorMessage) {
+        <div class="error-message">
+          <i class="fa-solid fa-circle-exclamation"></i>
+
+          {{ tablesErrorMessage }}
+        </div>
+      }
+
+      @if (!tablesLoading && !tablesErrorMessage) {
+        @if (tables.length > 0) {
+          <div class="tables-grid">
+            @for (table of tables; track table.id) {
+              <article class="table-card">
+                <div class="table-icon">
+                  <i class="fa-solid fa-chair"></i>
+                </div>
+
+                <div class="table-info">
+                  <h3>Table {{ table.tableNumber }}</h3>
+
+                  <p>
+                    <i class="fa-solid fa-users"></i>
+
+                    {{ table.capacity }} personnes
+                  </p>
+                </div>
+
+                <button type="button" class="btn btn-primary">
+                  <i class="fa-solid fa-check"></i>
+                  Choisir
+                </button>
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="empty-state">
+            <i class="fa-solid fa-chair"></i>
+
+            <p>Aucune table disponible pour le moment.</p>
+          </div>
+        }
+      }
+    </div>
   </div>
 </section>

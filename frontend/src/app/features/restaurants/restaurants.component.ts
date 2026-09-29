@@ -1,6 +1,5 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
-
 import { Restaurant } from '../../../models/restaurant.model';
 import { RestaurantService } from '../../../services/restaurant.service';
 
