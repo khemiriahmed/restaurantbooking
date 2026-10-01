@@ -106,9 +106,19 @@
                   </p>
                 </div>
 
-                <button type="button" class="btn btn-primary">
-                  <i class="fa-solid fa-check"></i>
-                  Choisir
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  [class.selected]="selectedTable?.id === table.id"
+                  (click)="selectTable(table)"
+                >
+                  @if (selectedTable?.id === table.id) {
+                    <i class="fa-solid fa-check"></i>
+                    Sélectionnée
+                  } @else {
+                    <i class="fa-solid fa-chair"></i>
+                    Choisir
+                  }
                 </button>
               </article>
             }
@@ -122,5 +132,88 @@
         }
       }
     </div>
+    @if (selectedTable) {
+
+  <div class="reservation-form">
+
+    <div class="reservation-form-header">
+
+      <span class="section-badge">
+        <i class="fa-solid fa-calendar-check"></i>
+        Réservation
+      </span>
+
+      <h2>
+        Réserver la table {{ selectedTable.tableNumber }}
+      </h2>
+
+      <p>
+        {{ selectedTable.capacity }} personnes
+      </p>
+
+    </div>
+
+
+    <div class="form-grid">
+
+      <div class="form-group">
+
+        <label for="reservationDate">
+          Date
+        </label>
+
+        <div class="input-wrapper">
+
+          <i class="fa-solid fa-calendar-days"></i>
+
+          <input
+            id="reservationDate"
+            type="date"
+            [(ngModel)]="reservationDate"
+          />
+
+        </div>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="reservationTime">
+          Heure
+        </label>
+
+        <div class="input-wrapper">
+
+          <i class="fa-solid fa-clock"></i>
+
+          <input
+            id="reservationTime"
+            type="time"
+            [(ngModel)]="reservationTime"
+          />
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <button
+      type="button"
+      class="btn btn-primary reservation-button"
+      (click)="continueReservation()"
+    >
+
+      <i class="fa-solid fa-calendar-check"></i>
+
+      Continuer
+
+    </button>
+
+  </div>
+
+}
   </div>
 </section>
