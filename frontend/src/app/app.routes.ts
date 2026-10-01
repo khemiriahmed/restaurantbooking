@@ -13,15 +13,22 @@ export const routes: Routes = [
       {
         path: 'restaurants',
         loadComponent: () =>
-          import('./features/restaurants/restaurants.component')
-            .then(m => m.RestaurantsComponent)
+          import('./features/restaurants/restaurants.component').then(
+            (m) => m.RestaurantsComponent,
+          ),
       },
       {
         path: 'restaurants/:id',
         loadComponent: () =>
-          import('./features/restaurant-detail/restaurant-detail.component')
-            .then(m => m.RestaurantDetailComponent)
-      }
+          import('./features/restaurant-detail/restaurant-detail.component').then(
+            (m) => m.RestaurantDetailComponent,
+          ),
+      },
+      {
+        path: 'login',
+        loadComponent: () =>
+          import('./features/login/login.component').then((m) => m.LoginComponent),
+      },
     ],
   },
   {
