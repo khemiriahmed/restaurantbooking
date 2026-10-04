@@ -36,6 +36,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/register/register.component').then((m) => m.RegisterComponent),
       },
+      {
+        path: 'reservations',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/reservations/reservations.component').then(
+            (m) => m.ReservationsComponent,
+          ),
+      },
     ],
   },
   {
