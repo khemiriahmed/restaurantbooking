@@ -1,58 +1,72 @@
-<header class="navbar">
+<nav class="navbar">
   <div class="navbar-container">
-
     <!-- Logo -->
-    <a routerLink="/" class="logo">
-      <span class="logo-icon">🍽️</span>
+    <a routerLink="/" class="navbar-brand">
+      <i class="fa-solid fa-utensils"></i>
       <span>Restaurant Booking</span>
     </a>
 
-    <!-- Bouton menu mobile -->
-    <button class="menu-toggle" type="button" (click)="toggleMenu()" aria-label="Ouvrir le menu">
-      ☰
-    </button>
-
-    <!-- Navigation principale -->
-    <nav class="nav-links" [class.active]="isMenuOpen">
-
-      <!-- <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+    <!-- Navigation -->
+    <div class="navbar-menu">
+      <a 
+        routerLink="/"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-link"
+      >
+        <i class="fa-solid fa-house"></i>
         Accueil
-      </a> -->
+      </a>
 
-      <a routerLink="/restaurants" routerLinkActive="active">
+      <a routerLink="/restaurants" routerLinkActive="active" class="nav-link">
+        <i class="fa-solid fa-utensils"></i>
         Restaurants
       </a>
 
-      <a routerLink="/reservations" routerLinkActive="active">
-        Réservations
-      </a>
+      @if (isLoggedIn) {
+        <a routerLink="/reservations" routerLinkActive="active" class="nav-link">
+          <i class="fa-solid fa-calendar-check"></i>
+          Mes réservations
+        </a>
+      }
+    </div>
 
-      <a routerLink="/login" routerLinkActive="active">
-        Connexion
-      </a>
+    <!-- Actions utilisateur -->
+    <div class="navbar-actions">
+      @if (!isLoggedIn) {
+        <a routerLink="/login" class="btn btn-outline">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          Connexion
+        </a>
 
-      <a routerLink="/register" routerLinkActive="active" class="register-link">
-        Inscription
-      </a>
+        <a routerLink="/register" class="btn btn-primary">
+          <i class="fa-solid fa-user-plus"></i>
+          Inscription
+        </a>
+      } @else {
+        <div class="user-menu">
+          <div class="user-info">
+            <div class="user-avatar">
+              <i class="fa-solid fa-user"></i>
+            </div>
 
-      <!-- Menu utilisateur provisoire -->
-      <div class="user-menu">
-        <button type="button" class="user-button" (click)="toggleUserMenu()">
-          👤 Mon compte ▾
-        </button>
+            <div class="user-details">
+              <span class="user-email">
+                {{ userEmail }}
+              </span>
 
-        @if (isUserMenuOpen) {
-        <div class="user-dropdown">
-          <a routerLink="/profile">Mon profil</a>
-          <a routerLink="/reservations">Mes réservations</a>
+              <span class="user-role">
+                {{ userRole }}
+              </span>
+            </div>
+          </div>
 
-          <button type="button" (click)="logout()">
+          <button type="button" class="logout-button" (click)="logout()">
+            <i class="fa-solid fa-right-from-bracket"></i>
             Déconnexion
           </button>
         </div>
-        }
-      </div>
-
-    </nav>
+      }
+    </div>
   </div>
-</header>
+</nav>
