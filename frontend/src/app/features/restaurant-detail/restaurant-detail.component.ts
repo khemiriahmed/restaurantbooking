@@ -170,8 +170,14 @@ export class RestaurantDetailComponent implements OnInit {
 
         this.reservationLoading = false;
 
-        if (error.status === 400) {
-          this.reservationErrorMessage = 'Les données de réservation sont invalides.';
+        if (error.status === 409) {
+          this.reservationErrorMessage =
+            error.error?.message ||
+            error.error?.error ||
+            'Cette réservation entre en conflit avec une réservation existante.';
+        } else if (error.status === 400) {
+          this.reservationErrorMessage =
+            error.error?.message || 'Les données de réservation sont invalides.';
         } else if (error.status === 401) {
           this.reservationErrorMessage = 'Votre session a expiré. Veuillez vous reconnecter.';
         } else if (error.status === 403) {
