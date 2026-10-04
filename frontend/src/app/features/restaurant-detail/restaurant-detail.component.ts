@@ -1,23 +1,26 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Restaurant } from '../../../models/restaurant.model';
-import { RestaurantService } from '../../../services/restaurant.service';
 import { RestaurantTable } from '../../../models/restaurant-table.model';
+import { RestaurantService } from '../../../services/restaurant.service';
+import { ReservationService } from '../../../services/reservation.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-restaurant-detail',
   standalone: true,
- imports: [
-    FormsModule
-  ],
+  imports: [FormsModule],
   templateUrl: './restaurant-detail.component.html',
   styleUrl: './restaurant-detail.component.css',
 })
 export class RestaurantDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly restaurantService = inject(RestaurantService);
+  private readonly reservationService = inject(ReservationService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   restaurant: Restaurant | null = null;
   loading = true;
@@ -30,6 +33,9 @@ export class RestaurantDetailComponent implements OnInit {
   selectedTable: RestaurantTable | null = null;
   reservationDate = '';
   reservationTime = '';
+
+  numberOfPeople = 1;
+  reservationEndTime = '';
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -106,6 +112,66 @@ export class RestaurantDetailComponent implements OnInit {
       tableId: this.selectedTable.id,
       date: this.reservationDate,
       time: this.reservationTime,
+    });
+  }
+  createReservation(): void {
+    if (!this.selectedTable) {
+      return;
+    }
+
+    if (!this.restaurant) {
+      return;
+    }
+
+    if (!this.reservationDate) {
+      return;
+    }
+
+    if (!this.reservationTime) {
+      return;
+    }
+
+    if (!this.reservationEndTime) {
+      return;
+    }
+
+    if (this.numberOfPeople < 1) {
+      return;
+    }
+
+    const user = this.authService.getCurrentUser();
+
+    if (!user) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    const request = {
+      userId: user.userId,
+      restaurantId: this.restaurant.id,
+      tableId: this.selectedTable.id,
+      reservationDate: this.reservationDate,
+      startTime: this.reservationTime,
+      endTime: this.reservationEndTime,
+      numberOfPeople: this.numberOfPeople,
+    };
+
+    console.log('Réservation envoyée :', request);
+
+    this.reservationService.createReservation(request).subscribe({
+      next: (reservation) => {
+        console.log('Réservation créée :', reservation);
+
+        this.router.navigate(['/reservations']);
+      },
+
+      error: (error) => {
+        console.error('Erreur création réservation :', error);
+
+        this.errorMessage = 'Impossible de créer la réservation.';
+
+        this.cdr.detectChanges();
+      },
     });
   }
 }
