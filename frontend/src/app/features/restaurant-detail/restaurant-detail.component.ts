@@ -36,6 +36,8 @@ export class RestaurantDetailComponent implements OnInit {
 
   numberOfPeople = 1;
   reservationEndTime = '';
+  reservationLoading = false;
+  reservationErrorMessage = '';
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -95,23 +97,91 @@ export class RestaurantDetailComponent implements OnInit {
     console.log('Table sélectionnée :', table);
   }
   continueReservation(): void {
+    this.reservationErrorMessage = '';
+
+    const user = this.authService.getCurrentUser();
+
+    if (!user) {
+      this.reservationErrorMessage = 'Vous devez être connecté pour effectuer une réservation.';
+      return;
+    }
+
+    if (!this.restaurant) {
+      this.reservationErrorMessage = 'Restaurant introuvable.';
+      return;
+    }
+
     if (!this.selectedTable) {
+      this.reservationErrorMessage = 'Veuillez sélectionner une table.';
       return;
     }
 
     if (!this.reservationDate) {
+      this.reservationErrorMessage = 'Veuillez sélectionner une date.';
       return;
     }
 
     if (!this.reservationTime) {
+      this.reservationErrorMessage = 'Veuillez sélectionner une heure de début.';
       return;
     }
 
-    console.log('Réservation préparée :', {
-      restaurantId: this.restaurant?.id,
+    if (!this.reservationEndTime) {
+      this.reservationErrorMessage = 'Veuillez sélectionner une heure de fin.';
+      return;
+    }
+
+    if (this.numberOfPeople < 1) {
+      this.reservationErrorMessage = 'Le nombre de personnes doit être au minimum de 1.';
+      return;
+    }
+
+    if (this.reservationEndTime <= this.reservationTime) {
+      this.reservationErrorMessage = "L'heure de fin doit être après l'heure de début.";
+      return;
+    }
+
+    const request = {
+      userId: user.userId,
+      restaurantId: this.restaurant.id,
       tableId: this.selectedTable.id,
-      date: this.reservationDate,
-      time: this.reservationTime,
+      reservationDate: this.reservationDate,
+      startTime: this.reservationTime,
+      endTime: this.reservationEndTime,
+      numberOfPeople: this.numberOfPeople,
+    };
+
+    console.log('POST réservation :', request);
+
+    this.reservationLoading = true;
+
+    this.reservationService.createReservation(request).subscribe({
+      next: (response) => {
+        console.log('Réservation créée :', response);
+
+        this.reservationLoading = false;
+        this.cdr.detectChanges();
+
+        this.router.navigate(['/reservations']);
+      },
+
+      error: (error) => {
+        console.error('Erreur création réservation :', error);
+
+        this.reservationLoading = false;
+
+        if (error.status === 400) {
+          this.reservationErrorMessage = 'Les données de réservation sont invalides.';
+        } else if (error.status === 401) {
+          this.reservationErrorMessage = 'Votre session a expiré. Veuillez vous reconnecter.';
+        } else if (error.status === 403) {
+          this.reservationErrorMessage = 'Vous n’avez pas l’autorisation de réserver.';
+        } else {
+          this.reservationErrorMessage = 'Impossible de créer la réservation.';
+        }
+
+        this.cdr.detectChanges();
+      },
     });
   }
   createReservation(): void {

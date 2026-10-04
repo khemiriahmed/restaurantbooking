@@ -133,87 +133,80 @@
       }
     </div>
     @if (selectedTable) {
+      <div class="reservation-form">
+        <div class="reservation-form-header">
+          <span class="section-badge">
+            <i class="fa-solid fa-calendar-check"></i>
+            Réservation
+          </span>
 
-  <div class="reservation-form">
+          <h2>Réserver la table {{ selectedTable.tableNumber }}</h2>
 
-    <div class="reservation-form-header">
-
-      <span class="section-badge">
-        <i class="fa-solid fa-calendar-check"></i>
-        Réservation
-      </span>
-
-      <h2>
-        Réserver la table {{ selectedTable.tableNumber }}
-      </h2>
-
-      <p>
-        {{ selectedTable.capacity }} personnes
-      </p>
-
-    </div>
-
-
-    <div class="form-grid">
-
-      <div class="form-group">
-
-        <label for="reservationDate">
-          Date
-        </label>
-
-        <div class="input-wrapper">
-
-          <i class="fa-solid fa-calendar-days"></i>
-
-          <input
-            id="reservationDate"
-            type="date"
-            [(ngModel)]="reservationDate"
-          />
-
+          <p>{{ selectedTable.capacity }} personnes</p>
         </div>
 
-      </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="reservationDate"> Date </label>
 
+            <div class="input-wrapper">
+              <i class="fa-solid fa-calendar-days"></i>
 
-      <div class="form-group">
+              <input id="reservationDate" type="date" [(ngModel)]="reservationDate" />
+            </div>
+          </div>
 
-        <label for="reservationTime">
-          Heure
-        </label>
+          <div class="form-group">
+            <label for="reservationTime"> Heure </label>
 
-        <div class="input-wrapper">
+            <div class="input-wrapper">
+              <i class="fa-solid fa-clock"></i>
 
-          <i class="fa-solid fa-clock"></i>
+              <input id="reservationTime" type="time" [(ngModel)]="reservationTime" />
+            </div>
+          </div>
 
-          <input
-            id="reservationTime"
-            type="time"
-            [(ngModel)]="reservationTime"
-          />
+          <div class="form-group">
+            <label for="reservationEndTime">Heure de fin</label>
 
+            <div class="input-wrapper">
+              <i class="fa-solid fa-clock"></i>
+
+              <input id="reservationEndTime" type="time" [(ngModel)]="reservationEndTime" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="numberOfPeople">Nombre de personnes</label>
+
+            <div class="input-wrapper">
+              <i class="fa-solid fa-users"></i>
+
+              <input id="numberOfPeople" type="number" min="1" [(ngModel)]="numberOfPeople" />
+            </div>
+          </div>
+          @if (reservationErrorMessage) {
+            <div class="error-message">
+              <i class="fa-solid fa-circle-exclamation"></i>
+              {{ reservationErrorMessage }}
+            </div>
+          }
         </div>
 
+        <button
+          type="button"
+          class="btn btn-primary reservation-button"
+          (click)="continueReservation()"
+          [disabled]="reservationLoading"
+        >
+          @if (reservationLoading) {
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            Création...
+          } @else {
+            <i class="fa-solid fa-calendar-check"></i>
+            Confirmer la réservation
+          }
+        </button>
       </div>
-
-    </div>
-
-
-    <button
-      type="button"
-      class="btn btn-primary reservation-button"
-      (click)="continueReservation()"
-    >
-
-      <i class="fa-solid fa-calendar-check"></i>
-
-      Continuer
-
-    </button>
-
-  </div>
-
-}
+    }
   </div>
 </section>
