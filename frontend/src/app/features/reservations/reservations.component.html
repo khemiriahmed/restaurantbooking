@@ -1,0 +1,137 @@
+<section class="reservations-page">
+  <div class="page-header">
+    <div>
+      <span class="section-badge">
+        <i class="fa-solid fa-calendar-check"></i>
+        Mes réservations
+      </span>
+
+      <h1>Mes réservations</h1>
+
+      <p>Consultez et gérez vos réservations de restaurant.</p>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="loading-state">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <p>Chargement de vos réservations...</p>
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="error-message">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (!loading && !errorMessage) {
+    @if (reservations.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="fa-solid fa-calendar-xmark"></i>
+        </div>
+
+        <h2>Aucune réservation</h2>
+
+        <p>Vous n'avez pas encore effectué de réservation.</p>
+
+        <a routerLink="/restaurants" class="btn btn-primary">
+          <i class="fa-solid fa-utensils"></i>
+          Découvrir les restaurants
+        </a>
+      </div>
+    } @else {
+      <div class="reservations-grid">
+        @for (reservation of reservations; track reservation.id) {
+          <article class="reservation-card">
+            <div class="reservation-card-header">
+              <div class="reservation-icon">
+                <i class="fa-solid fa-calendar-check"></i>
+              </div>
+
+              <span
+                class="status-badge"
+                [class.pending]="reservation.status === 'PENDING'"
+                [class.confirmed]="reservation.status === 'CONFIRMED'"
+                [class.rejected]="reservation.status === 'REJECTED'"
+                [class.cancelled]="reservation.status === 'CANCELLED'"
+                [class.completed]="reservation.status === 'COMPLETED'"
+              >
+                {{ reservation.status }}
+              </span>
+            </div>
+
+            <div class="reservation-content">
+              <h2>Réservation #{{ reservation.id }}</h2>
+
+              <div class="reservation-info">
+                <div class="info-item">
+                  <i class="fa-solid fa-calendar-days"></i>
+
+                  <div>
+                    <span class="info-label"> Date </span>
+
+                    <strong>
+                      {{ reservation.reservationDate }}
+                    </strong>
+                  </div>
+                </div>
+
+                <div class="info-item">
+                  <i class="fa-solid fa-clock"></i>
+
+                  <div>
+                    <span class="info-label"> Horaire </span>
+
+                    <strong>
+                      {{ reservation.startTime }}
+                      -
+                      {{ reservation.endTime }}
+                    </strong>
+                  </div>
+                </div>
+
+                <div class="info-item">
+                  <i class="fa-solid fa-users"></i>
+
+                  <div>
+                    <span class="info-label"> Personnes </span>
+
+                    <strong>
+                      {{ reservation.numberOfPeople }}
+                    </strong>
+                  </div>
+                </div>
+
+                <div class="info-item">
+                  <i class="fa-solid fa-chair"></i>
+
+                  <div>
+                    <span class="info-label"> Table </span>
+
+                    <strong> #{{ reservation.tableId }} </strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            @if (reservation.status !== 'CANCELLED' && reservation.status !== 'COMPLETED') {
+              <div class="reservation-actions">
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  (click)="cancelReservation(reservation)"
+                >
+                  <i class="fa-solid fa-ban"></i>
+                  Annuler
+                </button>
+              </div>
+            }
+          </article>
+        }
+      </div>
+    }
+  }
+</section>
