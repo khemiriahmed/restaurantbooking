@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+
 import { Reservation } from '../../../models/reservation.model';
 import { ReservationService } from '../../../services/reservation.service';
 import { AuthService } from '../../../services/auth.service';
@@ -22,6 +23,9 @@ export class ReservationsComponent implements OnInit {
 
   loading = true;
   errorMessage = '';
+  successMessage = '';
+
+  cancellingReservationId: number | null = null;
 
   ngOnInit(): void {
     this.loadReservations();
@@ -32,6 +36,7 @@ export class ReservationsComponent implements OnInit {
 
     if (!user) {
       this.errorMessage = 'Utilisateur non connecté.';
+
       this.loading = false;
       return;
     }
@@ -41,13 +46,17 @@ export class ReservationsComponent implements OnInit {
 
     this.reservationService.getReservationsByUser(user.userId).subscribe({
       next: (data) => {
+        console.log('Réservations reçues :', data);
+
         this.reservations = data;
         this.loading = false;
 
         this.cdr.detectChanges();
       },
 
-      error: () => {
+      error: (error) => {
+        console.error('Erreur chargement réservations :', error);
+
         this.errorMessage = 'Impossible de charger vos réservations.';
 
         this.loading = false;
@@ -62,15 +71,30 @@ export class ReservationsComponent implements OnInit {
       return;
     }
 
+    this.successMessage = '';
+    this.errorMessage = '';
+
+    this.cancellingReservationId = reservation.id;
+
     this.reservationService.cancelReservation(reservation.id).subscribe({
       next: (updatedReservation) => {
+        console.log('Réservation annulée :', updatedReservation);
+
         reservation.status = updatedReservation.status;
+
+        this.cancellingReservationId = null;
+
+        this.successMessage = 'Votre réservation a été annulée avec succès.';
 
         this.cdr.detectChanges();
       },
 
-      error: () => {
-        this.errorMessage = 'Impossible d\'annuler la réservation.';
+      error: (error) => {
+        console.error('Erreur annulation réservation :', error);
+
+        this.cancellingReservationId = null;
+
+        this.errorMessage = error.error?.message || 'Impossible d’annuler la réservation.';
 
         this.cdr.detectChanges();
       },

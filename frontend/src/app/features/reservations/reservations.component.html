@@ -12,6 +12,13 @@
     </div>
   </div>
 
+  @if (successMessage) {
+    <div class="success-message">
+      <i class="fa-solid fa-circle-check"></i>
+      <span>{{ successMessage }}</span>
+    </div>
+  }
+
   @if (loading) {
     <div class="loading-state">
       <i class="fa-solid fa-spinner fa-spin"></i>
@@ -123,9 +130,15 @@
                   type="button"
                   class="btn btn-danger"
                   (click)="cancelReservation(reservation)"
+                  [disabled]="cancellingReservationId === reservation.id"
                 >
-                  <i class="fa-solid fa-ban"></i>
-                  Annuler
+                  @if (cancellingReservationId === reservation.id) {
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    Annulation...
+                  } @else {
+                    <i class="fa-solid fa-ban"></i>
+                    Annuler
+                  }
                 </button>
               </div>
             }
