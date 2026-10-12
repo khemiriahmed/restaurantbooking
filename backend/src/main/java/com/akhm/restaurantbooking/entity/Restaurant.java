@@ -59,6 +59,10 @@ public class Restaurant {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id")
+    private User owner;
+
     @OneToMany(
             mappedBy = "restaurant",
             cascade = CascadeType.ALL,
