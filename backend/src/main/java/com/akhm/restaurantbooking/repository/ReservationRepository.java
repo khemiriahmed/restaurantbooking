@@ -5,10 +5,8 @@ import com.akhm.restaurantbooking.enums.ReservationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
-import java.util.List;
-
-import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 public interface ReservationRepository
         extends JpaRepository<Reservation, Long> {
@@ -16,6 +14,8 @@ public interface ReservationRepository
     List<Reservation> findByUserId(Long userId);
 
     List<Reservation> findByRestaurantId(Long restaurantId);
+
+    List<Reservation> findByRestaurantOwnerId(Long ownerId);
 
     List<Reservation> findByRestaurantTableId(Long tableId);
 
