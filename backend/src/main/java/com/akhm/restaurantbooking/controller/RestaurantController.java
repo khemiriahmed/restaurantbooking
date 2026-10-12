@@ -3,10 +3,13 @@ package com.akhm.restaurantbooking.controller;
 import com.akhm.restaurantbooking.dto.restaurant.RestaurantRequest;
 import com.akhm.restaurantbooking.dto.restaurant.RestaurantResponse;
 import com.akhm.restaurantbooking.entity.Restaurant;
+import com.akhm.restaurantbooking.entity.User;
 import com.akhm.restaurantbooking.service.RestaurantService;
+import com.akhm.restaurantbooking.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +20,7 @@ import java.util.List;
 public class RestaurantController {
 
     private final RestaurantService restaurantService;
+    private final UserService userService;
 
     @GetMapping
     public List<RestaurantResponse> findAll() {
@@ -32,6 +36,18 @@ public class RestaurantController {
 
         return restaurantService
                 .findActiveRestaurants()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @GetMapping("/mine")
+    public List<RestaurantResponse> findMine(Authentication authentication) {
+
+        User user = userService.findByEmail(authentication.getName());
+
+        return restaurantService
+                .findByOwner(user.getId())
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -74,8 +90,11 @@ public class RestaurantController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public RestaurantResponse create(
-            @Valid @RequestBody RestaurantRequest request
+            @Valid @RequestBody RestaurantRequest request,
+            Authentication authentication
     ) {
+
+        User owner = userService.findByEmail(authentication.getName());
 
         Restaurant restaurant = Restaurant.builder()
                 .name(request.name())
@@ -87,6 +106,7 @@ public class RestaurantController {
                 .cuisineType(request.cuisineType())
                 .averagePrice(request.averagePrice())
                 .imageUrl(request.imageUrl())
+                .owner(owner)
                 .build();
 
         return toResponse(
@@ -97,8 +117,11 @@ public class RestaurantController {
     @PutMapping("/{id}")
     public RestaurantResponse update(
             @PathVariable Long id,
-            @Valid @RequestBody RestaurantRequest request
+            @Valid @RequestBody RestaurantRequest request,
+            Authentication authentication
     ) {
+
+        checkManagePermission(id, authentication);
 
         Restaurant restaurant = Restaurant.builder()
                 .name(request.name())
@@ -118,28 +141,52 @@ public class RestaurantController {
     }
 
     @PatchMapping("/{id}/activate")
-    public void activate(
-            @PathVariable Long id
+    public RestaurantResponse activate(
+            @PathVariable Long id,
+            Authentication authentication
     ) {
 
-        restaurantService.activate(id);
+        checkManagePermission(id, authentication);
+
+        return toResponse(restaurantService.activate(id));
     }
 
     @PatchMapping("/{id}/deactivate")
-    public void deactivate(
-            @PathVariable Long id
+    public RestaurantResponse deactivate(
+            @PathVariable Long id,
+            Authentication authentication
     ) {
 
-        restaurantService.deactivate(id);
+        checkManagePermission(id, authentication);
+
+        return toResponse(restaurantService.deactivate(id));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Authentication authentication
     ) {
 
+        checkManagePermission(id, authentication);
+
         restaurantService.delete(id);
+    }
+
+    /**
+     * Autorise l'action si l'utilisateur est ADMIN
+     * ou le propriétaire du restaurant.
+     */
+    private void checkManagePermission(
+            Long restaurantId,
+            Authentication authentication
+    ) {
+
+        restaurantService.checkManagePermission(
+                restaurantId,
+                authentication.getName()
+        );
     }
 
     private RestaurantResponse toResponse(
