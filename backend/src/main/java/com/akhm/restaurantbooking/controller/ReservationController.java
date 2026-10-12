@@ -20,9 +20,9 @@ public class ReservationController {
     private final ReservationService reservationService;
 
     @GetMapping
-    public List<ReservationResponse> findAll() {
+    public List<ReservationResponse> findAll(Authentication authentication) {
 
-        return reservationService.findAll()
+        return reservationService.findAll(authentication.getName())
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -35,20 +35,18 @@ public class ReservationController {
     ) {
 
         return toResponse(
-                reservationService.findById(
-                        id,
-                        authentication.getName()
-                )
+                reservationService.findById(id, authentication.getName())
         );
     }
 
     @GetMapping("/user/{userId}")
     public List<ReservationResponse> findByUser(
-            @PathVariable Long userId
+            @PathVariable Long userId,
+            Authentication authentication
     ) {
 
         return reservationService
-                .findByUser(userId)
+                .findByUser(userId, authentication.getName())
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -56,11 +54,12 @@ public class ReservationController {
 
     @GetMapping("/restaurant/{restaurantId}")
     public List<ReservationResponse> findByRestaurant(
-            @PathVariable Long restaurantId
+            @PathVariable Long restaurantId,
+            Authentication authentication
     ) {
 
         return reservationService
-                .findByRestaurant(restaurantId)
+                .findByRestaurant(restaurantId, authentication.getName())
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -68,11 +67,12 @@ public class ReservationController {
 
     @GetMapping("/table/{tableId}")
     public List<ReservationResponse> findByTable(
-            @PathVariable Long tableId
+            @PathVariable Long tableId,
+            Authentication authentication
     ) {
 
         return reservationService
-                .findByTable(tableId)
+                .findByTable(tableId, authentication.getName())
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -81,18 +81,19 @@ public class ReservationController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ReservationResponse create(
-            @Valid @RequestBody ReservationRequest request
+            @Valid @RequestBody ReservationRequest request,
+            Authentication authentication
     ) {
 
         Reservation reservation =
                 reservationService.create(
-                        request.userId(),
                         request.restaurantId(),
                         request.tableId(),
                         request.reservationDate(),
                         request.startTime(),
                         request.endTime(),
-                        request.numberOfPeople()
+                        request.numberOfPeople(),
+                        authentication.getName()
                 );
 
         return toResponse(reservation);
@@ -105,10 +106,7 @@ public class ReservationController {
     ) {
 
         return toResponse(
-                reservationService.confirm(
-                        id,
-                        authentication.getName()
-                )
+                reservationService.confirm(id, authentication.getName())
         );
     }
 
@@ -119,10 +117,7 @@ public class ReservationController {
     ) {
 
         return toResponse(
-                reservationService.reject(
-                        id,
-                        authentication.getName()
-                )
+                reservationService.reject(id, authentication.getName())
         );
     }
 
@@ -133,10 +128,7 @@ public class ReservationController {
     ) {
 
         return toResponse(
-                reservationService.cancel(
-                        id,
-                        authentication.getName()
-                )
+                reservationService.cancel(id, authentication.getName())
         );
     }
 
@@ -147,10 +139,7 @@ public class ReservationController {
     ) {
 
         return toResponse(
-                reservationService.complete(
-                        id,
-                        authentication.getName()
-                )
+                reservationService.complete(id, authentication.getName())
         );
     }
 
@@ -161,15 +150,10 @@ public class ReservationController {
             Authentication authentication
     ) {
 
-        reservationService.delete(
-                id,
-                authentication.getName()
-        );
+        reservationService.delete(id, authentication.getName());
     }
 
-    private ReservationResponse toResponse(
-            Reservation reservation
-    ) {
+    private ReservationResponse toResponse(Reservation reservation) {
 
         return new ReservationResponse(
                 reservation.getId(),
@@ -180,7 +164,10 @@ public class ReservationController {
                 reservation.getStatus(),
                 reservation.getUser().getId(),
                 reservation.getRestaurant().getId(),
-                reservation.getRestaurantTable().getId()
+                reservation.getRestaurant().getName(),
+                reservation.getRestaurantTable().getId(),
+                reservation.getRestaurantTable().getTableNumber(),
+                reservation.getCreatedAt()
         );
     }
 }
