@@ -88,7 +88,7 @@
 .input-wrapper i {
     position: absolute;
 
-    left: 15px;
+    right: 15px;
     top: 50%;
 
     transform: translateY(-50%);

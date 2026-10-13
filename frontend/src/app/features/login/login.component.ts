@@ -39,17 +39,26 @@ export class LoginComponent {
         password: this.password,
       })
       .subscribe({
-        next: (response) => {
-          console.log('Connexion réussie :', response);
+        next: () => {
           this.loading = false;
           this.cdr.detectChanges();
-          this.router.navigate(['/']);
+
+          const user = this.authService.getCurrentUser();
+
+          const target =
+            user && (user.role === 'ADMIN' || user.role === 'RESTAURANT')
+              ? '/dashboard'
+              : '/';
+
+          this.router.navigate([target]);
         },
 
         error: (error) => {
-          console.error('Erreur de connexion :', error);
           this.loading = false;
-          this.errorMessage = 'Email ou mot de passe incorrect.';
+          this.errorMessage =
+            error?.status === 401
+              ? 'Email ou mot de passe incorrect.'
+              : 'Connexion impossible pour le moment.';
           this.cdr.detectChanges();
         },
       });
