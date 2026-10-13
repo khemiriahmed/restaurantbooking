@@ -6,15 +6,17 @@ import com.akhm.restaurantbooking.entity.RestaurantTable;
 import com.akhm.restaurantbooking.entity.User;
 import com.akhm.restaurantbooking.enums.ReservationStatus;
 import com.akhm.restaurantbooking.enums.RestaurantTableStatus;
+import com.akhm.restaurantbooking.enums.RoleName;
 import com.akhm.restaurantbooking.exception.BadRequestException;
 import com.akhm.restaurantbooking.exception.ConflictException;
 import com.akhm.restaurantbooking.exception.ResourceNotFoundException;
 import com.akhm.restaurantbooking.repository.ReservationRepository;
 import com.akhm.restaurantbooking.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -31,8 +33,22 @@ public class ReservationService {
     private final RestaurantTableService tableService;
     private final RestaurantHourService hourService;
 
-    public List<Reservation> findAll() {
-        return reservationRepository.findAll();
+    /**
+     * Liste les réservations accessibles à l'utilisateur connecté :
+     * toutes pour un ADMIN, celles de ses restaurants pour un
+     * RESTAURANT, les siennes pour un CLIENT.
+     */
+    public List<Reservation> findAll(String authenticatedEmail) {
+
+        User user = getAuthenticatedUser(authenticatedEmail);
+
+        return switch (user.getRole().getName()) {
+            case ADMIN -> reservationRepository.findAll();
+            case RESTAURANT -> reservationRepository
+                    .findByRestaurantOwnerId(user.getId());
+            case CLIENT -> reservationRepository
+                    .findByUserId(user.getId());
+        };
     }
 
     public Reservation findById(
@@ -40,38 +56,25 @@ public class ReservationService {
             String authenticatedEmail
     ) {
 
-        Reservation reservation = reservationRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Reservation not found with id: " + id
-                        )
-                );
+        Reservation reservation = getReservation(id);
 
-        User authenticatedUser =
-                getAuthenticatedUser(authenticatedEmail);
-
-        if (!reservation.getUser().getId()
-                .equals(authenticatedUser.getId())) {
-
-            throw new AccessDeniedException(
-                    "You are not allowed to access this reservation"
-            );
-        }
+        checkCanView(reservation, getAuthenticatedUser(authenticatedEmail));
 
         return reservation;
     }
 
-    private User getAuthenticatedUser(String email) {
+    public List<Reservation> findByUser(
+            Long userId,
+            String authenticatedEmail
+    ) {
 
-        return userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "User not found with email: " + email
-                        )
-                );
-    }
+        User user = getAuthenticatedUser(authenticatedEmail);
 
-    public List<Reservation> findByUser(Long userId) {
+        if (!isAdmin(user) && !user.getId().equals(userId)) {
+            throw new AccessDeniedException(
+                    "You are not allowed to access these reservations"
+            );
+        }
 
         userService.findById(userId);
 
@@ -79,33 +82,41 @@ public class ReservationService {
     }
 
     public List<Reservation> findByRestaurant(
-            Long restaurantId
+            Long restaurantId,
+            String authenticatedEmail
     ) {
 
-        restaurantService.findById(restaurantId);
+        Restaurant restaurant = restaurantService.findById(restaurantId);
 
-        return reservationRepository
-                .findByRestaurantId(restaurantId);
+        checkRestaurantManager(restaurant, getAuthenticatedUser(authenticatedEmail));
+
+        return reservationRepository.findByRestaurantId(restaurantId);
     }
 
     public List<Reservation> findByTable(
-            Long tableId
+            Long tableId,
+            String authenticatedEmail
     ) {
 
-        tableService.findById(tableId);
+        RestaurantTable table = tableService.findById(tableId);
 
-        return reservationRepository
-                .findByRestaurantTableId(tableId);
+        checkRestaurantManager(
+                table.getRestaurant(),
+                getAuthenticatedUser(authenticatedEmail)
+        );
+
+        return reservationRepository.findByRestaurantTableId(tableId);
     }
 
+    @Transactional
     public Reservation create(
-            Long userId,
             Long restaurantId,
             Long tableId,
             LocalDate date,
             LocalTime startTime,
             LocalTime endTime,
-            Integer numberOfPeople
+            Integer numberOfPeople,
+            String authenticatedEmail
     ) {
 
         // 1. Validation des données
@@ -117,7 +128,7 @@ public class ReservationService {
         );
 
         // 2. Vérifier utilisateur
-        User user = userService.findById(userId);
+        User user = getAuthenticatedUser(authenticatedEmail);
 
         if (!Boolean.TRUE.equals(user.getEnabled())) {
 
@@ -172,28 +183,14 @@ public class ReservationService {
         // 9. Vérifier horaires
         DayOfWeek day = date.getDayOfWeek();
 
-        boolean restaurantOpen =
-                hourService.isRestaurantOpen(
-                        restaurantId,
-                        day,
-                        startTime
-                );
-
-        if (!restaurantOpen) {
+        if (!hourService.isRestaurantOpen(restaurantId, day, startTime)) {
 
             throw new ConflictException(
                     "Restaurant is closed at this time"
             );
         }
 
-        boolean endInsideOpeningHours =
-                hourService.isRestaurantOpen(
-                        restaurantId,
-                        day,
-                        endTime
-                );
-
-        if (!endInsideOpeningHours) {
+        if (!hourService.isRestaurantOpen(restaurantId, day, endTime)) {
 
             throw new ConflictException(
                     "Reservation ends after restaurant closing time"
@@ -234,9 +231,7 @@ public class ReservationService {
                         .restaurantTable(table)
                         .build();
 
-        return reservationRepository.save(
-                reservation
-        );
+        return reservationRepository.save(reservation);
     }
 
     private void validateReservationData(
@@ -284,102 +279,192 @@ public class ReservationService {
         }
     }
 
+    /**
+     * Confirmation par le restaurateur (ou un administrateur).
+     */
     public Reservation confirm(Long id, String authenticatedEmail) {
 
-        Reservation reservation = findById(id,authenticatedEmail);
+        Reservation reservation = getReservation(id);
 
-        if (reservation.getStatus()
-                != ReservationStatus.PENDING) {
+        checkRestaurantManager(
+                reservation.getRestaurant(),
+                getAuthenticatedUser(authenticatedEmail)
+        );
+
+        if (reservation.getStatus() != ReservationStatus.PENDING) {
 
             throw new ConflictException(
                     "Only pending reservations can be confirmed"
             );
         }
 
-        reservation.setStatus(
-                ReservationStatus.CONFIRMED
-        );
+        reservation.setStatus(ReservationStatus.CONFIRMED);
 
-        return reservationRepository.save(
-                reservation
-        );
+        return reservationRepository.save(reservation);
     }
 
     public Reservation reject(Long id, String authenticatedEmail) {
 
-        Reservation reservation = findById(id, authenticatedEmail);
+        Reservation reservation = getReservation(id);
 
-        if (reservation.getStatus()
-                != ReservationStatus.PENDING) {
+        checkRestaurantManager(
+                reservation.getRestaurant(),
+                getAuthenticatedUser(authenticatedEmail)
+        );
+
+        if (reservation.getStatus() != ReservationStatus.PENDING) {
 
             throw new ConflictException(
                     "Only pending reservations can be rejected"
             );
         }
 
-        reservation.setStatus(
-                ReservationStatus.REJECTED
-        );
+        reservation.setStatus(ReservationStatus.REJECTED);
 
-        return reservationRepository.save(
-                reservation
-        );
+        return reservationRepository.save(reservation);
     }
 
+    /**
+     * Annulation possible par le client propriétaire,
+     * le restaurateur ou un administrateur.
+     */
     public Reservation cancel(Long id, String authenticatedEmail) {
 
-        Reservation reservation = findById(id, authenticatedEmail);
+        Reservation reservation = getReservation(id);
 
-        if (reservation.getStatus()
-                == ReservationStatus.CANCELLED) {
+        User user = getAuthenticatedUser(authenticatedEmail);
+
+        if (!isAdmin(user)
+                && !isReservationOwner(reservation, user)
+                && !isRestaurantOwner(reservation, user)) {
+
+            throw new AccessDeniedException(
+                    "You are not allowed to cancel this reservation"
+            );
+        }
+
+        if (reservation.getStatus() == ReservationStatus.CANCELLED) {
 
             throw new ConflictException(
                     "Reservation is already cancelled"
             );
         }
 
-        if (reservation.getStatus()
-                == ReservationStatus.COMPLETED) {
+        if (reservation.getStatus() == ReservationStatus.COMPLETED) {
 
             throw new ConflictException(
                     "Completed reservation cannot be cancelled"
             );
         }
 
-        reservation.setStatus(
-                ReservationStatus.CANCELLED
-        );
+        reservation.setStatus(ReservationStatus.CANCELLED);
 
-        return reservationRepository.save(
-                reservation
-        );
+        return reservationRepository.save(reservation);
     }
 
     public Reservation complete(Long id, String authenticatedEmail) {
 
-        Reservation reservation = findById(id, authenticatedEmail);
+        Reservation reservation = getReservation(id);
 
-        if (reservation.getStatus()
-                != ReservationStatus.CONFIRMED) {
+        checkRestaurantManager(
+                reservation.getRestaurant(),
+                getAuthenticatedUser(authenticatedEmail)
+        );
+
+        if (reservation.getStatus() != ReservationStatus.CONFIRMED) {
 
             throw new ConflictException(
                     "Only confirmed reservations can be completed"
             );
         }
 
-        reservation.setStatus(
-                ReservationStatus.COMPLETED
-        );
+        reservation.setStatus(ReservationStatus.COMPLETED);
 
-        return reservationRepository.save(
-                reservation
-        );
+        return reservationRepository.save(reservation);
     }
 
     public void delete(Long id, String authenticatedEmail) {
 
-        Reservation reservation = findById(id, authenticatedEmail);
+        Reservation reservation = getReservation(id);
+
+        User user = getAuthenticatedUser(authenticatedEmail);
+
+        if (!isAdmin(user) && !isReservationOwner(reservation, user)) {
+
+            throw new AccessDeniedException(
+                    "You are not allowed to delete this reservation"
+            );
+        }
 
         reservationRepository.delete(reservation);
+    }
+
+    // ------------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------------
+
+    private Reservation getReservation(Long id) {
+
+        return reservationRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Reservation not found with id: " + id
+                        )
+                );
+    }
+
+    private User getAuthenticatedUser(String email) {
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "User not found with email: " + email
+                        )
+                );
+    }
+
+    private boolean isAdmin(User user) {
+        return user.getRole().getName() == RoleName.ADMIN;
+    }
+
+    private boolean isReservationOwner(Reservation reservation, User user) {
+        return reservation.getUser().getId().equals(user.getId());
+    }
+
+    private boolean isRestaurantOwner(Reservation reservation, User user) {
+
+        User owner = reservation.getRestaurant().getOwner();
+
+        return owner != null && owner.getId().equals(user.getId());
+    }
+
+    private void checkCanView(Reservation reservation, User user) {
+
+        if (isAdmin(user)
+                || isReservationOwner(reservation, user)
+                || isRestaurantOwner(reservation, user)) {
+
+            return;
+        }
+
+        throw new AccessDeniedException(
+                "You are not allowed to access this reservation"
+        );
+    }
+
+    private void checkRestaurantManager(Restaurant restaurant, User user) {
+
+        if (isAdmin(user)) {
+            return;
+        }
+
+        User owner = restaurant.getOwner();
+
+        if (owner == null || !owner.getId().equals(user.getId())) {
+
+            throw new AccessDeniedException(
+                    "You are not allowed to manage this restaurant"
+            );
+        }
     }
 }
