@@ -20,6 +20,7 @@ export class RegisterComponent {
   firstName = '';
   lastName = '';
   email = '';
+  phone = '';
   password = '';
   confirmPassword = '';
 
@@ -40,6 +41,11 @@ export class RegisterComponent {
       return;
     }
 
+    if (this.password.length < 6) {
+      this.errorMessage = 'Le mot de passe doit contenir au moins 6 caractères.';
+      return;
+    }
+
     if (this.password !== this.confirmPassword) {
       this.errorMessage = 'Les mots de passe ne correspondent pas.';
       return;
@@ -53,25 +59,23 @@ export class RegisterComponent {
         lastName: this.lastName,
         email: this.email,
         password: this.password,
+        phone: this.phone || undefined,
       })
       .subscribe({
-        next: (response) => {
-          console.log('Inscription réussie :', response);
-
+        next: () => {
           this.loading = false;
-
           this.cdr.detectChanges();
-
           this.router.navigate(['/']);
         },
 
         error: (error) => {
-          console.error('Erreur lors de l’inscription :', error);
-
           this.loading = false;
 
-          if (error.status === 409) {
+          if (error?.status === 409) {
             this.errorMessage = 'Cette adresse email est déjà utilisée.';
+          } else if (error?.status === 400) {
+            this.errorMessage =
+              error?.error?.message || 'Veuillez vérifier les informations saisies.';
           } else {
             this.errorMessage = 'Impossible de créer le compte.';
           }

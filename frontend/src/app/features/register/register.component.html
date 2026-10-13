@@ -77,6 +77,23 @@
       </div>
 
       <div class="form-group">
+        <label for="phone"> Téléphone <span class="optional">(optionnel)</span> </label>
+
+        <div class="input-wrapper">
+          <i class="fa-solid fa-phone"></i>
+
+          <input
+            id="phone"
+            name="phone"
+            type="tel"
+            [(ngModel)]="phone"
+            placeholder="+216 00 000 000"
+            autocomplete="tel"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
         <label for="password"> Mot de passe </label>
 
         <div class="input-wrapper">
