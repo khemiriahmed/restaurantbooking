@@ -1,1 +1,2 @@
-@import '@fortawesome/fontawesome-free/css/all.min.css';/* You can add global styles to this file, and also import other style files */
+/* Styles globaux du composant racine.
+   Les polices et FontAwesome sont chargés via angular.json (styles globaux). */
