@@ -3,6 +3,7 @@ package com.akhm.restaurantbooking.dto.reservation;
 import com.akhm.restaurantbooking.enums.ReservationStatus;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public record ReservationResponse(
@@ -15,7 +16,10 @@ public record ReservationResponse(
         ReservationStatus status,
         Long userId,
         Long restaurantId,
-        Long tableId
+        String restaurantName,
+        Long tableId,
+        Integer tableNumber,
+        LocalDateTime createdAt
 
 ) {
 }
