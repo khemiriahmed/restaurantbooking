@@ -7,10 +7,11 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+/**
+ * Requête de création d'une réservation.
+ * L'utilisateur propriétaire est déduit du token JWT (jamais du client).
+ */
 public record ReservationRequest(
-
-        @NotNull
-        Long userId,
 
         @NotNull
         Long restaurantId,
