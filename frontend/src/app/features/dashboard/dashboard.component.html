@@ -1,0 +1,171 @@
+<section class="dashboard-page">
+  <div class="section-container">
+    <div class="page-header">
+      <span class="section-badge">
+        <i class="fa-solid fa-gauge"></i>
+        Espace de gestion
+      </span>
+
+      <h1>Bonjour {{ currentUser()?.firstName }} 👋</h1>
+
+      <p>Gérez les réservations de vos restaurants.</p>
+    </div>
+
+    @if (successMessage()) {
+      <div class="alert alert-success">
+        <i class="fa-solid fa-circle-check"></i>
+        <span>{{ successMessage() }}</span>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="alert alert-error">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <i class="fa-solid fa-utensils"></i>
+        <div>
+          <span class="stat-value">{{ restaurants().length }}</span>
+          <span class="stat-label">Restaurant(s)</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <i class="fa-solid fa-hourglass-half"></i>
+        <div>
+          <span class="stat-value">{{ pendingCount() }}</span>
+          <span class="stat-label">En attente</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <i class="fa-solid fa-calendar-check"></i>
+        <div>
+          <span class="stat-value">{{ confirmedCount() }}</span>
+          <span class="stat-label">Confirmées</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-toolbar">
+      <h2>Réservations</h2>
+
+      <label class="filter">
+        <i class="fa-solid fa-filter"></i>
+        <select [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+          <option value="ALL">Tous les statuts</option>
+          <option value="PENDING">En attente</option>
+          <option value="CONFIRMED">Confirmées</option>
+          <option value="COMPLETED">Terminées</option>
+          <option value="REJECTED">Refusées</option>
+          <option value="CANCELLED">Annulées</option>
+        </select>
+      </label>
+    </div>
+
+    @if (loading()) {
+      <div class="loading">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Chargement des réservations...
+      </div>
+    }
+
+    @if (!loading() && filteredReservations().length === 0) {
+      <div class="empty-state">
+        <i class="fa-solid fa-calendar-xmark"></i>
+        <p>Aucune réservation à afficher.</p>
+      </div>
+    }
+
+    @if (!loading() && filteredReservations().length > 0) {
+      <div class="table-wrapper">
+        <table class="reservations-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Restaurant</th>
+              <th>Date</th>
+              <th>Horaire</th>
+              <th>Table</th>
+              <th>Pers.</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (reservation of filteredReservations(); track reservation.id) {
+              <tr>
+                <td>{{ reservation.id }}</td>
+                <td>{{ reservation.restaurantName }}</td>
+                <td>{{ reservation.reservationDate | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ reservation.startTime }} - {{ reservation.endTime }}</td>
+                <td>#{{ reservation.tableNumber }}</td>
+                <td>{{ reservation.numberOfPeople }}</td>
+                <td>
+                  <span
+                    class="status-badge"
+                    [class.pending]="reservation.status === 'PENDING'"
+                    [class.confirmed]="reservation.status === 'CONFIRMED'"
+                    [class.rejected]="reservation.status === 'REJECTED'"
+                    [class.cancelled]="reservation.status === 'CANCELLED'"
+                    [class.completed]="reservation.status === 'COMPLETED'"
+                  >
+                    {{ reservation.status }}
+                  </span>
+                </td>
+                <td class="actions">
+                  @if (canConfirm(reservation)) {
+                    <button
+                      class="btn btn-small btn-success"
+                      [disabled]="processingId() === reservation.id"
+                      (click)="applyStatus(reservation, 'confirm')"
+                    >
+                      <i class="fa-solid fa-check"></i>
+                      Confirmer
+                    </button>
+
+                    <button
+                      class="btn btn-small btn-danger"
+                      [disabled]="processingId() === reservation.id"
+                      (click)="applyStatus(reservation, 'reject')"
+                    >
+                      <i class="fa-solid fa-xmark"></i>
+                      Refuser
+                    </button>
+                  }
+
+                  @if (canComplete(reservation)) {
+                    <button
+                      class="btn btn-small btn-outline"
+                      [disabled]="processingId() === reservation.id"
+                      (click)="applyStatus(reservation, 'complete')"
+                    >
+                      <i class="fa-solid fa-flag-checkered"></i>
+                      Terminer
+                    </button>
+                  }
+
+                  @if (!isFinished(reservation)) {
+                    <button
+                      class="btn btn-small btn-danger"
+                      [disabled]="processingId() === reservation.id"
+                      (click)="applyStatus(reservation, 'cancel')"
+                    >
+                      <i class="fa-solid fa-ban"></i>
+                      Annuler
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</section>
