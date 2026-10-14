@@ -1,212 +1,288 @@
 <section class="restaurant-detail">
   <div class="section-container">
-    @if (loading) {
+    @if (loading()) {
       <div class="loading">
         <i class="fa-solid fa-spinner fa-spin"></i>
-
         Chargement du restaurant...
       </div>
     }
 
-    @if (errorMessage) {
-      <div class="error-message">
+    @if (errorMessage()) {
+      <div class="alert alert-error">
         <i class="fa-solid fa-circle-exclamation"></i>
-
-        {{ errorMessage }}
+        {{ errorMessage() }}
       </div>
     }
 
-    @if (restaurant && !loading) {
-      <div class="restaurant-header">
-        <div class="restaurant-icon">
-          <i class="fa-solid fa-utensils"></i>
-        </div>
-
-        <div>
-          <h1>
-            {{ restaurant.name }}
-          </h1>
-
-          <p class="location">
-            <i class="fa-solid fa-location-dot"></i>
-
-            {{ restaurant.address }}
-          </p>
-        </div>
-      </div>
-
-      <div class="restaurant-content">
-        <h2>À propos du restaurant</h2>
-
-        @if (restaurant.description) {
-          <p>
-            {{ restaurant.description }}
-          </p>
-        } @else {
-          <p>Découvrez ce restaurant et ses différentes possibilités de réservation.</p>
-        }
-      </div>
-
-      <div class="reservation-action">
-        <h2>Prêt à réserver ?</h2>
-
-        <p>Consultez les tables disponibles et choisissez votre date de réservation.</p>
-
-        <button class="btn btn-primary">
-          <i class="fa-solid fa-calendar-check"></i>
-
-          Réserver une table
-        </button>
-      </div>
-    }
-    <div class="tables-section">
-      <div class="section-header">
-        <span class="section-badge">
-          <i class="fa-solid fa-chair"></i>
-          Disponibilité
-        </span>
-
-        <h2>Choisissez votre table</h2>
-
-        <p>Sélectionnez une table disponible pour votre réservation.</p>
-      </div>
-
-      @if (tablesLoading) {
-        <div class="loading">
-          <i class="fa-solid fa-spinner fa-spin"></i>
-
-          Chargement des tables...
-        </div>
-      }
-
-      @if (tablesErrorMessage) {
-        <div class="error-message">
-          <i class="fa-solid fa-circle-exclamation"></i>
-
-          {{ tablesErrorMessage }}
-        </div>
-      }
-
-      @if (!tablesLoading && !tablesErrorMessage) {
-        @if (tables.length > 0) {
-          <div class="tables-grid">
-            @for (table of tables; track table.id) {
-              <article class="table-card">
-                <div class="table-icon">
-                  <i class="fa-solid fa-chair"></i>
-                </div>
-
-                <div class="table-info">
-                  <h3>Table {{ table.tableNumber }}</h3>
-
-                  <p>
-                    <i class="fa-solid fa-users"></i>
-
-                    {{ table.capacity }} personnes
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  class="btn btn-primary"
-                  [class.selected]="selectedTable?.id === table.id"
-                  (click)="selectTable(table)"
-                >
-                  @if (selectedTable?.id === table.id) {
-                    <i class="fa-solid fa-check"></i>
-                    Sélectionnée
-                  } @else {
-                    <i class="fa-solid fa-chair"></i>
-                    Choisir
-                  }
-                </button>
-              </article>
+    @if (restaurant(); as resto) {
+      @if (!loading()) {
+        <div class="restaurant-hero">
+          <div
+            class="restaurant-hero-image"
+            [style.background-image]="resto.imageUrl ? 'url(' + resto.imageUrl + ')' : null"
+          >
+            @if (!resto.imageUrl) {
+              <i class="fa-solid fa-utensils"></i>
             }
           </div>
-        } @else {
-          <div class="empty-state">
-            <i class="fa-solid fa-chair"></i>
 
-            <p>Aucune table disponible pour le moment.</p>
+          <div class="restaurant-hero-content">
+            <div class="hero-title">
+              <h1>{{ resto.name }}</h1>
+
+              @if (!resto.active) {
+                <span class="status-badge cancelled">Fermé</span>
+              }
+            </div>
+
+            <p class="location">
+              <i class="fa-solid fa-location-dot"></i>
+              {{ resto.city }} — {{ resto.address }}
+            </p>
+
+            <div class="restaurant-tags">
+              @if (resto.cuisineType) {
+                <span class="tag">
+                  <i class="fa-solid fa-utensils"></i>
+                  {{ resto.cuisineType }}
+                </span>
+              }
+
+              @if (resto.averagePrice) {
+                <span class="tag">
+                  <i class="fa-solid fa-coins"></i>
+                  {{ resto.averagePrice }} DT
+                </span>
+              }
+
+              @if (resto.phone) {
+                <span class="tag">
+                  <i class="fa-solid fa-phone"></i>
+                  {{ resto.phone }}
+                </span>
+              }
+
+              @if (resto.email) {
+                <span class="tag">
+                  <i class="fa-solid fa-envelope"></i>
+                  {{ resto.email }}
+                </span>
+              }
+            </div>
+
+            <p class="description">
+              {{ resto.description || 'Découvrez ce restaurant et réservez votre table.' }}
+            </p>
+          </div>
+        </div>
+
+        <div class="two-columns">
+          <!-- Horaires -->
+          <div class="panel">
+            <h2>
+              <i class="fa-solid fa-clock"></i>
+              Horaires d'ouverture
+            </h2>
+
+            @if (sortedHours().length === 0) {
+              <p class="muted">Horaires non renseignés.</p>
+            } @else {
+              <ul class="hours-list">
+                @for (hour of sortedHours(); track hour.id) {
+                  <li>
+                    <span class="day">{{ dayLabel(hour.dayOfWeek) }}</span>
+
+                    @if (hour.closed) {
+                      <span class="closed">Fermé</span>
+                    } @else {
+                      <span class="time">
+                        {{ formatTime(hour.openingTime) }} — {{ formatTime(hour.closingTime) }}
+                      </span>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+
+          <!-- Tables -->
+          <div class="panel">
+            <h2>
+              <i class="fa-solid fa-chair"></i>
+              Tables disponibles
+            </h2>
+
+            <div class="people-selector">
+              <label for="numberOfPeople">Nombre de personnes</label>
+
+              <div class="stepper">
+                <button type="button" (click)="numberOfPeople.set(numberOfPeople() - 1)" [disabled]="numberOfPeople() <= 1">
+                  <i class="fa-solid fa-minus"></i>
+                </button>
+
+                <input
+                  id="numberOfPeople"
+                  type="number"
+                  min="1"
+                  [ngModel]="numberOfPeople()"
+                  (ngModelChange)="numberOfPeople.set($event)"
+                />
+
+                <button type="button" (click)="numberOfPeople.set(numberOfPeople() + 1)">
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+              </div>
+            </div>
+
+            @if (tablesLoading()) {
+              <div class="loading">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                Chargement des tables...
+              </div>
+            }
+
+            @if (tablesErrorMessage()) {
+              <div class="alert alert-error">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                {{ tablesErrorMessage() }}
+              </div>
+            }
+
+            @if (!tablesLoading() && !tablesErrorMessage()) {
+              @if (eligibleTables().length === 0) {
+                <div class="empty-state">
+                  <i class="fa-solid fa-chair"></i>
+                  <p>Aucune table ne peut accueillir {{ numberOfPeople() }} personnes.</p>
+                </div>
+              } @else {
+                <div class="tables-grid">
+                  @for (table of eligibleTables(); track table.id) {
+                    <button
+                      type="button"
+                      class="table-card"
+                      [class.selected]="selectedTable()?.id === table.id"
+                      (click)="selectTable(table)"
+                    >
+                      <i class="fa-solid fa-chair"></i>
+                      <strong>Table {{ table.tableNumber }}</strong>
+                      <span>{{ table.capacity }} pers.</span>
+                    </button>
+                  }
+                </div>
+              }
+            }
+          </div>
+        </div>
+
+        <!-- Formulaire de réservation -->
+        @if (selectedTable(); as table) {
+          <div class="reservation-form">
+            <div class="reservation-form-header">
+              <span class="section-badge">
+                <i class="fa-solid fa-calendar-check"></i>
+                Réservation
+              </span>
+
+              <h2>Réserver la table {{ table.tableNumber }}</h2>
+
+              <p>{{ table.capacity }} personnes maximum</p>
+            </div>
+
+            @if (!isLoggedIn()) {
+              <div class="alert alert-error">
+                <i class="fa-solid fa-lock"></i>
+                <span>
+                  Vous devez être connecté pour réserver.
+                  <a routerLink="/login">Se connecter</a>
+                </span>
+              </div>
+            }
+
+            @if (formErrorMessage()) {
+              <div class="alert alert-error">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                {{ formErrorMessage() }}
+              </div>
+            }
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="reservationDate">Date</label>
+
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-calendar-days"></i>
+                  <input
+                    id="reservationDate"
+                    type="date"
+                    [min]="minDate"
+                    [ngModel]="reservationDate()"
+                    (ngModelChange)="reservationDate.set($event)"
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="startTime">Heure de début</label>
+
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-clock"></i>
+                  <input
+                    id="startTime"
+                    type="time"
+                    [ngModel]="startTime()"
+                    (ngModelChange)="startTime.set($event)"
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="endTime">Heure de fin</label>
+
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-clock"></i>
+                  <input
+                    id="endTime"
+                    type="time"
+                    [ngModel]="endTime()"
+                    (ngModelChange)="endTime.set($event)"
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="people">Nombre de personnes</label>
+
+                <div class="input-wrapper">
+                  <i class="fa-solid fa-users"></i>
+                  <input
+                    id="people"
+                    type="number"
+                    min="1"
+                    [max]="table.capacity"
+                    [ngModel]="numberOfPeople()"
+                    (ngModelChange)="numberOfPeople.set($event)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-primary reservation-button"
+              (click)="submitReservation()"
+              [disabled]="submitting()"
+            >
+              @if (submitting()) {
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                Création...
+              } @else {
+                <i class="fa-solid fa-calendar-check"></i>
+                Confirmer la réservation
+              }
+            </button>
           </div>
         }
       }
-    </div>
-    @if (selectedTable) {
-      <div class="reservation-form">
-        <div class="reservation-form-header">
-          <span class="section-badge">
-            <i class="fa-solid fa-calendar-check"></i>
-            Réservation
-          </span>
-
-          <h2>Réserver la table {{ selectedTable.tableNumber }}</h2>
-
-          <p>{{ selectedTable.capacity }} personnes</p>
-        </div>
-
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="reservationDate"> Date </label>
-
-            <div class="input-wrapper">
-              <i class="fa-solid fa-calendar-days"></i>
-
-              <input id="reservationDate" type="date" [(ngModel)]="reservationDate" />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="reservationTime"> Heure </label>
-
-            <div class="input-wrapper">
-              <i class="fa-solid fa-clock"></i>
-
-              <input id="reservationTime" type="time" [(ngModel)]="reservationTime" />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="reservationEndTime">Heure de fin</label>
-
-            <div class="input-wrapper">
-              <i class="fa-solid fa-clock"></i>
-
-              <input id="reservationEndTime" type="time" [(ngModel)]="reservationEndTime" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="numberOfPeople">Nombre de personnes</label>
-
-            <div class="input-wrapper">
-              <i class="fa-solid fa-users"></i>
-
-              <input id="numberOfPeople" type="number" min="1" [(ngModel)]="numberOfPeople" />
-            </div>
-          </div>
-          @if (reservationErrorMessage) {
-            <div class="error-message">
-              <i class="fa-solid fa-circle-exclamation"></i>
-              {{ reservationErrorMessage }}
-            </div>
-          }
-        </div>
-
-        <button
-          type="button"
-          class="btn btn-primary reservation-button"
-          (click)="continueReservation()"
-          [disabled]="reservationLoading"
-        >
-          @if (reservationLoading) {
-            <i class="fa-solid fa-spinner fa-spin"></i>
-            Création...
-          } @else {
-            <i class="fa-solid fa-calendar-check"></i>
-            Confirmer la réservation
-          }
-        </button>
-      </div>
     }
   </div>
 </section>
