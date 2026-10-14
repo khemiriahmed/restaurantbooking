@@ -12,33 +12,31 @@
     </div>
   </div>
 
-  @if (successMessage) {
-    <div class="success-message">
+  @if (successMessage()) {
+    <div class="alert alert-success">
       <i class="fa-solid fa-circle-check"></i>
-      <span>{{ successMessage }}</span>
+      <span>{{ successMessage() }}</span>
     </div>
   }
 
-  @if (loading) {
-    <div class="loading-state">
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading">
       <i class="fa-solid fa-spinner fa-spin"></i>
       <p>Chargement de vos réservations...</p>
     </div>
   }
 
-  @if (errorMessage) {
-    <div class="error-message">
-      <i class="fa-solid fa-circle-exclamation"></i>
-      {{ errorMessage }}
-    </div>
-  }
-
-  @if (!loading && !errorMessage) {
-    @if (reservations.length === 0) {
+  @if (!loading() && !errorMessage()) {
+    @if (reservations().length === 0) {
       <div class="empty-state">
-        <div class="empty-icon">
-          <i class="fa-solid fa-calendar-xmark"></i>
-        </div>
+        <i class="fa-solid fa-calendar-xmark"></i>
 
         <h2>Aucune réservation</h2>
 
@@ -50,101 +48,118 @@
         </a>
       </div>
     } @else {
-      <div class="reservations-grid">
-        @for (reservation of reservations; track reservation.id) {
-          <article class="reservation-card">
-            <div class="reservation-card-header">
-              <div class="reservation-icon">
-                <i class="fa-solid fa-calendar-check"></i>
-              </div>
+      <div class="reservations-toolbar">
+        <span class="counter">
+          <i class="fa-solid fa-hourglass-half"></i>
+          {{ upcomingCount() }} réservation(s) à venir
+        </span>
 
-              <span
-                class="status-badge"
-                [class.pending]="reservation.status === 'PENDING'"
-                [class.confirmed]="reservation.status === 'CONFIRMED'"
-                [class.rejected]="reservation.status === 'REJECTED'"
-                [class.cancelled]="reservation.status === 'CANCELLED'"
-                [class.completed]="reservation.status === 'COMPLETED'"
-              >
-                {{ reservation.status }}
-              </span>
-            </div>
-
-            <div class="reservation-content">
-              <h2>Réservation #{{ reservation.id }}</h2>
-
-              <div class="reservation-info">
-                <div class="info-item">
-                  <i class="fa-solid fa-calendar-days"></i>
-
-                  <div>
-                    <span class="info-label"> Date </span>
-
-                    <strong>
-                      {{ reservation.reservationDate }}
-                    </strong>
-                  </div>
-                </div>
-
-                <div class="info-item">
-                  <i class="fa-solid fa-clock"></i>
-
-                  <div>
-                    <span class="info-label"> Horaire </span>
-
-                    <strong>
-                      {{ reservation.startTime }}
-                      -
-                      {{ reservation.endTime }}
-                    </strong>
-                  </div>
-                </div>
-
-                <div class="info-item">
-                  <i class="fa-solid fa-users"></i>
-
-                  <div>
-                    <span class="info-label"> Personnes </span>
-
-                    <strong>
-                      {{ reservation.numberOfPeople }}
-                    </strong>
-                  </div>
-                </div>
-
-                <div class="info-item">
-                  <i class="fa-solid fa-chair"></i>
-
-                  <div>
-                    <span class="info-label"> Table </span>
-
-                    <strong> #{{ reservation.tableId }} </strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            @if (reservation.status !== 'CANCELLED' && reservation.status !== 'COMPLETED') {
-              <div class="reservation-actions">
-                <button
-                  type="button"
-                  class="btn btn-danger"
-                  (click)="cancelReservation(reservation)"
-                  [disabled]="cancellingReservationId === reservation.id"
-                >
-                  @if (cancellingReservationId === reservation.id) {
-                    <i class="fa-solid fa-spinner fa-spin"></i>
-                    Annulation...
-                  } @else {
-                    <i class="fa-solid fa-ban"></i>
-                    Annuler
-                  }
-                </button>
-              </div>
-            }
-          </article>
-        }
+        <label class="filter">
+          <i class="fa-solid fa-filter"></i>
+          <select [value]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+            <option value="ALL">Tous les statuts</option>
+            <option value="PENDING">En attente</option>
+            <option value="CONFIRMED">Confirmées</option>
+            <option value="COMPLETED">Terminées</option>
+            <option value="REJECTED">Refusées</option>
+            <option value="CANCELLED">Annulées</option>
+          </select>
+        </label>
       </div>
+
+      @if (filteredReservations().length === 0) {
+        <div class="empty-state">
+          <i class="fa-solid fa-filter-circle-xmark"></i>
+          <p>Aucune réservation pour ce statut.</p>
+        </div>
+      } @else {
+        <div class="reservations-grid">
+          @for (reservation of filteredReservations(); track reservation.id) {
+            <article class="reservation-card">
+              <div class="reservation-card-header">
+                <div class="reservation-icon">
+                  <i class="fa-solid fa-calendar-check"></i>
+                </div>
+
+                <span
+                  class="status-badge"
+                  [class.pending]="reservation.status === 'PENDING'"
+                  [class.confirmed]="reservation.status === 'CONFIRMED'"
+                  [class.rejected]="reservation.status === 'REJECTED'"
+                  [class.cancelled]="reservation.status === 'CANCELLED'"
+                  [class.completed]="reservation.status === 'COMPLETED'"
+                >
+                  {{ statusLabel(reservation.status) }}
+                </span>
+              </div>
+
+              <div class="reservation-content">
+                <h2>{{ reservation.restaurantName }}</h2>
+
+                <div class="reservation-info">
+                  <div class="info-item">
+                    <i class="fa-solid fa-calendar-days"></i>
+
+                    <div>
+                      <span class="info-label">Date</span>
+                      <strong>{{ reservation.reservationDate | date: 'dd/MM/yyyy' }}</strong>
+                    </div>
+                  </div>
+
+                  <div class="info-item">
+                    <i class="fa-solid fa-clock"></i>
+
+                    <div>
+                      <span class="info-label">Horaire</span>
+                      <strong>
+                        {{ formatTime(reservation.startTime) }} -
+                        {{ formatTime(reservation.endTime) }}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div class="info-item">
+                    <i class="fa-solid fa-users"></i>
+
+                    <div>
+                      <span class="info-label">Personnes</span>
+                      <strong>{{ reservation.numberOfPeople }}</strong>
+                    </div>
+                  </div>
+
+                  <div class="info-item">
+                    <i class="fa-solid fa-chair"></i>
+
+                    <div>
+                      <span class="info-label">Table</span>
+                      <strong>#{{ reservation.tableNumber }}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              @if (canCancel(reservation)) {
+                <div class="reservation-actions">
+                  <button
+                    type="button"
+                    class="btn btn-danger"
+                    (click)="cancelReservation(reservation)"
+                    [disabled]="cancellingReservationId() === reservation.id"
+                  >
+                    @if (cancellingReservationId() === reservation.id) {
+                      <i class="fa-solid fa-spinner fa-spin"></i>
+                      Annulation...
+                    } @else {
+                      <i class="fa-solid fa-ban"></i>
+                      Annuler
+                    }
+                  </button>
+                </div>
+              }
+            </article>
+          }
+        </div>
+      }
     }
   }
 </section>

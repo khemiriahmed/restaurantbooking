@@ -1,69 +1,79 @@
-import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
-
-import { Reservation } from '../../../models/reservation.model';
-import { ReservationService } from '../../../services/reservation.service';
-import { AuthService } from '../../../services/auth.service';
+import { DatePipe } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
+import { Reservation, ReservationStatus } from '../../../models/reservation.model';
+import { ReservationService } from '../../../services/reservation.service';
 
 @Component({
   selector: 'app-reservations',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, DatePipe],
   templateUrl: './reservations.component.html',
   styleUrl: './reservations.component.css',
 })
 export class ReservationsComponent implements OnInit {
   private readonly reservationService = inject(ReservationService);
 
-  private readonly authService = inject(AuthService);
+  private readonly statusLabels: Record<ReservationStatus, string> = {
+    PENDING: 'En attente',
+    CONFIRMED: 'Confirmée',
+    REJECTED: 'Refusée',
+    CANCELLED: 'Annulée',
+    COMPLETED: 'Terminée',
+  };
 
-  private readonly cdr = inject(ChangeDetectorRef);
+  readonly reservations = signal<Reservation[]>([]);
+  readonly loading = signal(true);
+  readonly errorMessage = signal('');
+  readonly successMessage = signal('');
+  readonly cancellingReservationId = signal<number | null>(null);
+  readonly statusFilter = signal<ReservationStatus | 'ALL'>('ALL');
 
-  reservations: Reservation[] = [];
+  readonly filteredReservations = computed(() => {
+    const filter = this.statusFilter();
+    const all = this.reservations();
 
-  loading = true;
-  errorMessage = '';
-  successMessage = '';
+    return filter === 'ALL' ? all : all.filter((r) => r.status === filter);
+  });
 
-  cancellingReservationId: number | null = null;
+  readonly upcomingCount = computed(
+    () =>
+      this.reservations().filter(
+        (r) => r.status === 'PENDING' || r.status === 'CONFIRMED',
+      ).length,
+  );
 
   ngOnInit(): void {
     this.loadReservations();
   }
 
   loadReservations(): void {
-    const user = this.authService.getCurrentUser();
+    this.loading.set(true);
+    this.errorMessage.set('');
 
-    if (!user) {
-      this.errorMessage = 'Utilisateur non connecté.';
-
-      this.loading = false;
-      return;
-    }
-
-    this.loading = true;
-    this.errorMessage = '';
-
-    this.reservationService.getReservationsByUser(user.userId).subscribe({
+    this.reservationService.getReservations().subscribe({
       next: (data) => {
-        console.log('Réservations reçues :', data);
-
-        this.reservations = data;
-        this.loading = false;
-
-        this.cdr.detectChanges();
+        this.reservations.set(data);
+        this.loading.set(false);
       },
-
-      error: (error) => {
-        console.error('Erreur chargement réservations :', error);
-
-        this.errorMessage = 'Impossible de charger vos réservations.';
-
-        this.loading = false;
-
-        this.cdr.detectChanges();
+      error: () => {
+        this.errorMessage.set('Impossible de charger vos réservations.');
+        this.loading.set(false);
       },
     });
+  }
+
+  statusLabel(status: ReservationStatus): string {
+    return this.statusLabels[status];
+  }
+
+  formatTime(time: string | null): string {
+    return time ? time.substring(0, 5) : '--:--';
+  }
+
+  canCancel(reservation: Reservation): boolean {
+    return reservation.status === 'PENDING' || reservation.status === 'CONFIRMED';
   }
 
   cancelReservation(reservation: Reservation): void {
@@ -71,32 +81,23 @@ export class ReservationsComponent implements OnInit {
       return;
     }
 
-    this.successMessage = '';
-    this.errorMessage = '';
-
-    this.cancellingReservationId = reservation.id;
+    this.successMessage.set('');
+    this.errorMessage.set('');
+    this.cancellingReservationId.set(reservation.id);
 
     this.reservationService.cancelReservation(reservation.id).subscribe({
       next: (updatedReservation) => {
-        console.log('Réservation annulée :', updatedReservation);
-
-        reservation.status = updatedReservation.status;
-
-        this.cancellingReservationId = null;
-
-        this.successMessage = 'Votre réservation a été annulée avec succès.';
-
-        this.cdr.detectChanges();
+        this.reservations.update((list) =>
+          list.map((r) => (r.id === updatedReservation.id ? updatedReservation : r)),
+        );
+        this.cancellingReservationId.set(null);
+        this.successMessage.set('Votre réservation a été annulée avec succès.');
       },
-
       error: (error) => {
-        console.error('Erreur annulation réservation :', error);
-
-        this.cancellingReservationId = null;
-
-        this.errorMessage = error.error?.message || 'Impossible d’annuler la réservation.';
-
-        this.cdr.detectChanges();
+        this.cancellingReservationId.set(null);
+        this.errorMessage.set(
+          error?.error?.message || "Impossible d'annuler la réservation.",
+        );
       },
     });
   }

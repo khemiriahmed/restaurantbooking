@@ -1,7 +1,7 @@
 <section class="restaurants-page">
   <div class="section-container">
     <div class="page-header">
-      <span class="page-badge">
+      <span class="page-badge section-badge">
         <i class="fa-solid fa-utensils"></i>
         Restaurant Booking
       </span>
@@ -11,55 +11,110 @@
       <p>Trouvez le restaurant qui vous convient et réservez votre table facilement.</p>
     </div>
 
-    @if (loading) {
+    <div class="filters">
+      <div class="search-field">
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+        <input
+          type="text"
+          placeholder="Rechercher un restaurant, une ville, une cuisine..."
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+        />
+      </div>
+
+      <select [ngModel]="selectedCity()" (ngModelChange)="selectedCity.set($event)">
+        <option value="ALL">Toutes les villes</option>
+        @for (city of cities(); track city) {
+          <option [value]="city">{{ city }}</option>
+        }
+      </select>
+
+      <select [ngModel]="selectedCuisine()" (ngModelChange)="selectedCuisine.set($event)">
+        <option value="ALL">Toutes les cuisines</option>
+        @for (cuisine of cuisines(); track cuisine) {
+          <option [value]="cuisine">{{ cuisine }}</option>
+        }
+      </select>
+
+      <button type="button" class="btn btn-outline" (click)="resetFilters()">
+        <i class="fa-solid fa-rotate-left"></i>
+        Réinitialiser
+      </button>
+    </div>
+
+    @if (loading()) {
       <div class="loading">
         <i class="fa-solid fa-spinner fa-spin"></i>
         Chargement des restaurants...
       </div>
     }
 
-    @if (errorMessage) {
-      <div class="error-message">
+    @if (errorMessage()) {
+      <div class="alert alert-error">
         <i class="fa-solid fa-circle-exclamation"></i>
-
-        {{ errorMessage }}
+        {{ errorMessage() }}
       </div>
     }
 
-    @if (!loading && !errorMessage) {
-      <div class="restaurants-grid">
-        @for (restaurant of restaurants; track restaurant.id) {
-          <article class="restaurant-card">
-            <div class="restaurant-image">
-              <i class="fa-solid fa-utensils"></i>
-            </div>
+    @if (!loading() && !errorMessage()) {
+      @if (filteredRestaurants().length === 0) {
+        <div class="empty-state">
+          <i class="fa-solid fa-utensils"></i>
+          <p>Aucun restaurant ne correspond à votre recherche.</p>
+        </div>
+      } @else {
+        <div class="restaurants-grid">
+          @for (restaurant of filteredRestaurants(); track restaurant.id) {
+            <article class="restaurant-card">
+              <div
+                class="restaurant-image"
+                [style.background-image]="
+                  restaurant.imageUrl ? 'url(' + restaurant.imageUrl + ')' : null
+                "
+              >
+                @if (!restaurant.imageUrl) {
+                  <i class="fa-solid fa-utensils"></i>
+                }
+              </div>
 
-            <div class="restaurant-content">
-              <h2>
-                {{ restaurant.name }}
-              </h2>
+              <div class="restaurant-content">
+                <h2>{{ restaurant.name }}</h2>
 
-              <p class="restaurant-location">
-                <i class="fa-solid fa-location-dot"></i>
-
-                {{ restaurant.address }}
-              </p>
-
-              @if (restaurant.description) {
-                <p>
-                  {{ restaurant.description }}
+                <p class="restaurant-location">
+                  <i class="fa-solid fa-location-dot"></i>
+                  {{ restaurant.city }} — {{ restaurant.address }}
                 </p>
-              }
 
-              <a [routerLink]="['/restaurants', restaurant.id]" class="btn btn-primary">
-                Voir le restaurant
+                <div class="restaurant-tags">
+                  @if (restaurant.cuisineType) {
+                    <span class="tag">
+                      <i class="fa-solid fa-utensils"></i>
+                      {{ restaurant.cuisineType }}
+                    </span>
+                  }
 
-                <i class="fa-solid fa-arrow-right"></i>
-              </a>
-            </div>
-          </article>
-        }
-      </div>
+                  @if (restaurant.averagePrice) {
+                    <span class="tag">
+                      <i class="fa-solid fa-coins"></i>
+                      {{ restaurant.averagePrice }} DT
+                    </span>
+                  }
+                </div>
+
+                @if (restaurant.description) {
+                  <p class="restaurant-description">{{ restaurant.description }}</p>
+                }
+
+                <a [routerLink]="['/restaurants', restaurant.id]" class="btn btn-primary">
+                  Voir le restaurant
+                  <i class="fa-solid fa-arrow-right"></i>
+                </a>
+              </div>
+            </article>
+          }
+        </div>
+      }
     }
   </div>
 </section>
