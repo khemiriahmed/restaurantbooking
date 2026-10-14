@@ -8,7 +8,7 @@
 
     <!-- Navigation -->
     <div class="navbar-menu">
-      <a 
+      <a
         routerLink="/"
         routerLinkActive="active"
         [routerLinkActiveOptions]="{ exact: true }"
@@ -23,17 +23,24 @@
         Restaurants
       </a>
 
-      @if (isLoggedIn) {
+      @if (isLoggedIn()) {
         <a routerLink="/reservations" routerLinkActive="active" class="nav-link">
           <i class="fa-solid fa-calendar-check"></i>
           Mes réservations
+        </a>
+      }
+
+      @if (isRestaurant() || isAdmin()) {
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+          <i class="fa-solid fa-gauge"></i>
+          Gestion
         </a>
       }
     </div>
 
     <!-- Actions utilisateur -->
     <div class="navbar-actions">
-      @if (!isLoggedIn) {
+      @if (!isLoggedIn()) {
         <a routerLink="/login" class="btn btn-outline">
           <i class="fa-solid fa-right-to-bracket"></i>
           Connexion
@@ -52,11 +59,11 @@
 
             <div class="user-details">
               <span class="user-email">
-                {{ userEmail }}
+                {{ currentUser()?.firstName }} {{ currentUser()?.lastName }}
               </span>
 
               <span class="user-role">
-                {{ userRole }}
+                {{ currentUser()?.role }}
               </span>
             </div>
           </div>
