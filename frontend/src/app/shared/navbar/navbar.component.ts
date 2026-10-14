@@ -1,46 +1,23 @@
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
-import { RouterLink,RouterLinkActive } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink,RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css',
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent {
   private readonly authService = inject(AuthService);
-  private readonly cdr = inject(ChangeDetectorRef);
 
-  isLoggedIn = false;
-
-  userEmail = '';
-  userRole = '';
-
-  ngOnInit(): void {
-    this.updateAuthenticationState();
-  }
-
-  updateAuthenticationState(): void {
-    this.isLoggedIn = this.authService.isAuthenticated();
-
-    const user = this.authService.getCurrentUser();
-
-    if (user) {
-      this.userEmail = user.email;
-      this.userRole = user.role;
-    } else {
-      this.userEmail = '';
-      this.userRole = '';
-    }
-
-    this.cdr.detectChanges();
-  }
+  readonly currentUser = this.authService.currentUser;
+  readonly isLoggedIn = this.authService.isLoggedIn;
+  readonly isRestaurant = (): boolean => this.authService.isRestaurant();
+  readonly isAdmin = (): boolean => this.authService.isAdmin();
 
   logout(): void {
     this.authService.logout();
-
-    this.updateAuthenticationState();
   }
 }
