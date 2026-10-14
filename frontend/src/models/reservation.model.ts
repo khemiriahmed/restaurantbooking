@@ -1,7 +1,6 @@
 export type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED';
 
 export interface ReservationRequest {
-  userId: number;
   restaurantId: number;
   tableId: number;
   reservationDate: string;
@@ -19,5 +18,8 @@ export interface Reservation {
   status: ReservationStatus;
   userId: number;
   restaurantId: number;
+  restaurantName: string;
   tableId: number;
+  tableNumber: number;
+  createdAt: string;
 }
