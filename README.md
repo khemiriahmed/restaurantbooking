@@ -148,42 +148,6 @@ Trois restaurants de démonstration (horaires + tables) sont également créés.
 
 ---
 
-##  Structure du projet
-
-
-restaurant-booking-system/
-├── backend/                          # Spring Boot
-│   ├── Dockerfile                    # Build Maven multi-étapes + JRE
-│   └── src/
-│       ├── main/java/com/akhm/restaurantbooking/
-│       │   ├── config/               # Security, CORS, DataInitializer
-│       │   ├── controller/           # REST controllers
-│       │   ├── dto/                  # Records (requêtes/réponses)
-│       │   ├── entity/               # JPA entities
-│       │   ├── enums/                # Role, status, …
-│       │   ├── exception/            # GlobalExceptionHandler
-│       │   ├── repository/           # Spring Data JPA
-│       │   ├── security/             # JWT (filter, service, entry point)
-│       │   └── service/              # Logique métier
-│       └── test/                     # Tests d'intégration (H2)
-├── frontend/                         # Angular 21
-│   ├── Dockerfile                    # Build + nginx (reverse-proxy /api)
-│   ├── nginx.conf
-│   └── src/
-│       ├── app/
-│       │   ├── core/                 # Guards, interceptors
-│       │   ├── features/             # home, restaurants, restaurant-detail,
-│       │   │                         # login, register, reservations, dashboard
-│       │   └── shared/               # navbar, footer, layouts
-│       ├── models/                   # Interfaces (Restaurant, Reservation…)
-│       ├── services/                 # HTTP services
-│       └── environments/             # apiUrl par environnement
-├── docker-compose.yml                # postgres + backend + frontend
-└── README.md
-
-
----
-
 ##  Configuration (variables d'environnement)
 
 | Variable | Défaut | Description |
